@@ -16,14 +16,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private  PasswordEncoder passwordEncoder;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private  final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final AuthenticationManager authenticationManager;
 
 
     @Override
