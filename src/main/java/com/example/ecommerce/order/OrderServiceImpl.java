@@ -19,14 +19,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class OrderServiceImpl implements OrderService{
 
     @Autowired
@@ -77,19 +83,21 @@ public class OrderServiceImpl implements OrderService{
                 .items(new ArrayList<>())
                 .build();
 
-        request.getItemList().stream()
-                .map(orderItemRequest -> {
+        request.getItemList().forEach
+                (orderItemRequest -> {
                     Product product = productRepository.findById(orderItemRequest.getProductId())
                             .orElseThrow(() -> new ProductNotFoundException("Product not found: " + orderItemRequest.getProductId()));
 
-                   inventoryMovementService.deductStock(product.getId(), orderItemRequest.getQuantity());
+                    inventoryMovementService.deductStock(product.getId(), orderItemRequest.getQuantity());
 
-                    return OrderItem.builder()
+                    OrderItem orderItem = OrderItem.builder()
                             .productId(product.getId())
                             .quantity(orderItemRequest.getQuantity())
                             .unitPrice(product.getPrice())
-                            .build();})
-                .forEach(order::addOrderItem);
+                            .build();
+
+                    order.addOrderItem(orderItem);
+                });
 
         return orderRepository.save(order);
     }
@@ -122,18 +130,32 @@ public class OrderServiceImpl implements OrderService{
     }
 
     private BigDecimal calculateTotal(OrderRequest request) {
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(() -> new ProductNotFoundException("Product not found with ID: " + request.getProductId()));
+        return request.getItemList().stream()
+                .map(itemRequest -> {
+                    Product product = productRepository.findById(itemRequest.getProductId())
+                            .orElseThrow(() -> new ProductNotFoundException("Product not found: " + itemRequest.getProductId()));
 
-        BigDecimal price = product.getPrice();
-        BigDecimal quantity = BigDecimal.valueOf(request.getQuantity());
-
-        return price.multiply(quantity).setScale(2, RoundingMode.HALF_UP);
+                    BigDecimal unitPrice = product.getPrice();
+                    BigDecimal quantity = BigDecimal.valueOf(itemRequest.getQuantity());
+                    return unitPrice.multiply(quantity);
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
     }
     private void validateStockAvailability(OrderRequest request) {
+        List<String> productIds = request.getItemList().stream()
+                .map(OrderItemRequest::getProductId)
+                .toList();
+
+        Map<String, Product> productMap = productRepository.findAllById(productIds).stream()
+                .collect(Collectors.toMap(Product::getId, product -> product));
+
         for (OrderItemRequest item : request.getItemList()) {
-            Product product = productRepository.findById(item.getProductId())
-                    .orElseThrow(() -> new ProductNotFoundException("Product not found: " + item.getProductId()));
+            Product product = productMap.get(item.getProductId());
+
+            if (product == null) {
+                throw new ProductNotFoundException("Product not found: " + item.getProductId());
+            }
 
             if (product.getStockQuantity() < item.getQuantity()) {
                 throw new InsufficientStockException(
@@ -143,6 +165,7 @@ public class OrderServiceImpl implements OrderService{
             }
         }
     }
+
 
     @Override
     public void finalizeTransaction(String reference) {
@@ -154,13 +177,10 @@ public class OrderServiceImpl implements OrderService{
 
             Order order = orderRepository.findById(payment.getOrderId())
                     .orElseThrow(() -> new OrderNotFoundException("Order not found for payment: " + reference));
+
             order.setStatus(Status.PAID);
             payment.setStatus(PaymentStatus.SUCCESS);
-
-            order.getItems()
-                    .forEach(item -> inventoryMovementService.deductStock(
-                            item.getProductId(),
-                            item.getQuantity()));
+            payment.setTime(LocalDateTime.now());
 
             orderRepository.save(order);
             paymentRepository.save(payment);

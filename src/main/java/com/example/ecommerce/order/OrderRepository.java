@@ -1,7 +1,6 @@
 package com.example.ecommerce.order;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.ReadPreference;
 import org.springframework.stereotype.Repository;
 
 @Repository
