@@ -6,7 +6,6 @@ import com.example.ecommerce.exception.PaymentNotFoundException;
 import com.example.ecommerce.exception.ProductNotFoundException;
 import com.example.ecommerce.inventory.InventoryMovementRepository;
 import com.example.ecommerce.inventory.InventoryMovementService;
-import com.example.ecommerce.inventory.Reason;
 import com.example.ecommerce.payment.Payment;
 import com.example.ecommerce.payment.PaymentGatewayService;
 import com.example.ecommerce.payment.PaymentRepository;
@@ -55,7 +54,7 @@ public class OrderServiceImpl implements OrderService{
 
         Order order = savePendingOrder(request, user, totalAmount);
 
-        savedOrderItems(request, order);
+        savedOrderItems(request);
 
         String reference = paymentGatewayService.initiatePayment(
                 order.getTotalAmount(), "USD", order.getId().toString());
@@ -70,7 +69,7 @@ public class OrderServiceImpl implements OrderService{
         return reference;
     }
 
-    private void savedOrderItems(OrderRequest request, Order order) {
+    private void savedOrderItems(OrderRequest request) {
         Product product = productRepository.findById(request.getProductId())
                 .orElseThrow(()-> new ProductNotFoundException("product not found"));
 
@@ -154,9 +153,6 @@ public class OrderServiceImpl implements OrderService{
             }
         }
     }
-
-
-
 
     @Override
     public void finalizeTransaction(String reference) {
