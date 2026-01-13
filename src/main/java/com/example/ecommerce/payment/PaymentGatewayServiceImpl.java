@@ -10,11 +10,11 @@ import java.math.BigDecimal;
 public class PaymentGatewayServiceImpl implements PaymentGatewayService{
     @Override
     public PaymentStatus checkPaymentStatus(String reference) {
-        return null;
+        return PaymentStatus.SUCCESS;
     }
 
     @Override
     public String initiatePayment(BigDecimal totalAmount, String usd, String string) {
-        return "";
+        return "FAKE REF" + System.currentTimeMillis();
     }
 }

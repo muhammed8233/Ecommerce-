@@ -29,7 +29,7 @@ public class ProductController {
                                                                       direction = Sort.Direction.DESC) Pageable pageable){
         return ResponseEntity.ok(productService.getProducts(search, pageable));
     }
-    @PostMapping("/create")
+    @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public  ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request){
         ProductResponse create = productService.createProduct(request);
