@@ -19,15 +19,16 @@ public class OrderController {
        return new ResponseEntity<>(orderService.placeOrder(request), HttpStatus.NOT_FOUND);
    }
 
-   @PostMapping("/{id}/pay")
-   public ResponseEntity<String> verifyPayment(@PathVariable String reference){
+    @PostMapping("/{orderId}/initiate-payment")
+    public ResponseEntity<String> initiatePayment(@PathVariable OrderRequest request){
+        String payment =orderService.placeOrderAndInitiatePayment(request);
+        return ResponseEntity.ok(payment);
+    }
+
+   @PostMapping("/verify-payment")
+   public ResponseEntity<String> verifyPayment(@RequestParam String reference){
        orderService.finalizeTransaction(reference);
        return ResponseEntity.ok("verified successfully");
-   }
-   @PostMapping("/initiate/payment")
-   public ResponseEntity<String> initiatePayment(@RequestBody OrderRequest request){
-       String payment =orderService.placeOrderAndInitiatePayment(request);
-       return ResponseEntity.ok(payment);
    }
 
 

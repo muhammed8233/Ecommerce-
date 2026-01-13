@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Objects;
 
 @Service
@@ -54,8 +55,6 @@ public class OrderServiceImpl implements OrderService{
 
         Order order = savePendingOrder(request, user, totalAmount);
 
-        savedOrderItems(request);
-
         String reference = paymentGatewayService.initiatePayment(
                 order.getTotalAmount(), "USD", order.getId().toString());
 
@@ -69,30 +68,21 @@ public class OrderServiceImpl implements OrderService{
         return reference;
     }
 
-    private void savedOrderItems(OrderRequest request) {
-        Product product = productRepository.findById(request.getProductId())
-                .orElseThrow(()-> new ProductNotFoundException("product not found"));
-
-        OrderItem.builder()
-                .productId(product.getId())
-                .quantity(request.getQuantity())
-                .unitPrice(product.getPrice())
-                .build();
-    }
-
     private Order savePendingOrder(OrderRequest request, User user, BigDecimal totalAmount) {
 
         Order order = Order.builder()
                 .userId(user.getId())
                 .status(Status.PENDING)
                 .totalAmount(totalAmount)
+                .items(new ArrayList<>())
                 .build();
 
         request.getItemList().stream()
                 .map(orderItemRequest -> {
                     Product product = productRepository.findById(orderItemRequest.getProductId())
-                            .orElseThrow(() -> new ProductNotFoundException("Product not found: " + request.getProductId()));
+                            .orElseThrow(() -> new ProductNotFoundException("Product not found: " + orderItemRequest.getProductId()));
 
+                   inventoryMovementService.deductStock(product.getId(), orderItemRequest.getQuantity());
 
                     return OrderItem.builder()
                             .productId(product.getId())

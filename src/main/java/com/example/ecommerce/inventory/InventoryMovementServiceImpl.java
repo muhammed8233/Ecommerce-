@@ -51,10 +51,10 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
     public void deductStock(String productId, int quantity) {
 
         Query query = new Query(Criteria.where("_id").is(productId)
-                .and("stock").gte(quantity)
+                .and("stockQuantity").gte(quantity)
         );
 
-        Update update = new Update().inc("stock", -quantity);
+        Update update = new Update().inc("stockQuantity", -quantity);
 
         UpdateResult result = mongoTemplate.updateFirst(query, update, Product.class);
 
