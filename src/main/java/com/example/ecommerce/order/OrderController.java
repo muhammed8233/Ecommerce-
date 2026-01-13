@@ -25,7 +25,10 @@ public class OrderController {
        return ResponseEntity.ok("verified successfully");
    }
    @PostMapping("/initiate/payment")
-   public ResponseEntity<OrderResponse> initiatePayment()
+   public ResponseEntity<String> initiatePayment(@RequestBody OrderRequest request){
+       String payment =orderService.placeOrderAndInitiatePayment(request);
+       return ResponseEntity.ok(payment);
+   }
 
 
 }
