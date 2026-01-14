@@ -29,7 +29,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
+                .role(Role.ADMIN)
                 .build();
         userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);

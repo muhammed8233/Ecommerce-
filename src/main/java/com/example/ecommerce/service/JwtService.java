@@ -19,7 +19,7 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class JwtService{
-    private static final String secretKey = "";
+    private static final String secretKey = "58b1ae0d2fd2cfa8e48949d0ab35ccf0701803e81d7964c0705e5dd5dc4b4eb9";
 
     public String extractUsername(String token){
         return extractClaim(token, Claims::getSubject);
@@ -40,8 +40,7 @@ public class JwtService{
 
 
 
-    public String generateToken(Map<String, Objects> extractClaim, UserDetails userDetails){
-
+    public String generateToken(Map<String, Object> extractClaim , UserDetails userDetails){
         return Jwts
                 .builder()
                 .header()
@@ -50,10 +49,11 @@ public class JwtService{
                 .claims(extractClaim)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() * 100 * 60 * 24))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 24))
                 .signWith(getSignInKey(), Jwts.SIG.HS256)
                 .compact();
     }
+
 
     public boolean isTokenValid(String token, UserDetails userDetails){
         final String username = extractUsername(token);
@@ -73,7 +73,8 @@ public class JwtService{
     }
 
     private SecretKey getSignInKey() {
-        byte[] keyByte = secretKey.getBytes(StandardCharsets.UTF_8);
-        return Keys.hmacShaKeyFor(keyByte);
+        byte[] keyBytes = io.jsonwebtoken.io.Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
     }
+
 }

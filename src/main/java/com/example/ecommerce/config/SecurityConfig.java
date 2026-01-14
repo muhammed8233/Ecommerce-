@@ -1,9 +1,9 @@
 package com.example.ecommerce.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -27,8 +27,9 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/v1/products/**").permitAll()
+                        .requestMatchers("/api/v1/products/create", "/api/v1/products/restock").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/orders/**").authenticated()
                         .anyRequest()
                         .authenticated()
                 )

@@ -3,7 +3,6 @@ package com.example.ecommerce.product;
 
 import com.example.ecommerce.inventory.InventoryMovementService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,7 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = "api/v1/product")
+@RequestMapping(path = "api/v1/products")
 public class ProductController {
 
     @Autowired
@@ -44,7 +43,7 @@ public class ProductController {
         return ResponseEntity.ok(update);
     }
 
-    @PutMapping("/{productId}")
+    @PutMapping("/{productId}/restock")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<String> restockProduct(@PathVariable String productId,
                                                  @RequestParam int quantity){
