@@ -30,12 +30,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MongoCommandException.class)
     public ResponseEntity<Map<String, Object>> handleMongoCommandException(MongoCommandException ex) {
-        if (ex.getCode() == 13) {
-            return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+        if (ex.getCode() == 13){
+            return buildErrorResponse(HttpStatus.FORBIDDEN,
                     "Database error: User lacks 'insert' permissions for the specified collection.");
         }
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Database command failed: " + ex.getErrorMessage());
     }
+
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message) {
         Map<String, Object> body = new LinkedHashMap<>();
