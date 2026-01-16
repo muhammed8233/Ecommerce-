@@ -24,7 +24,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Document(collection = "users")
+@Document(collection = "user")
 public class User implements UserDetails {
     @Id
     private String id;

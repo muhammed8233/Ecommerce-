@@ -31,7 +31,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(Role.USER)
                 .build();
-        userRepository.save(user);
+        userRepository.insert(user);
         String jwtToken = jwtService.generateToken(user);
         return AuthenticationResponse
                 .builder()
