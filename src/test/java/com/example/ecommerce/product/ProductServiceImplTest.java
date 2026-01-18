@@ -19,10 +19,10 @@ class ProductServiceImplTest {
     @Autowired
     private ProductRepository productRepository;
 
-    @BeforeEach
-    void setUp() {
-        productRepository.deleteAll();
-    }
+//    @BeforeEach
+//    void setUp() {
+//        productRepository.deleteAll();
+//    }
 
     @Test
     void createProduct() {
