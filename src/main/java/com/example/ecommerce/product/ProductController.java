@@ -28,7 +28,7 @@ public class ProductController {
                                                                       direction = Sort.Direction.DESC) Pageable pageable){
         return ResponseEntity.ok(productService.getProducts(search, pageable));
     }
-    @PostMapping
+    @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
     public  ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request){
         ProductResponse create = productService.createProduct(request);
