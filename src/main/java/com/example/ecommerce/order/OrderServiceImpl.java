@@ -15,7 +15,14 @@ import com.example.ecommerce.product.ProductRepository;
 import com.example.ecommerce.user.User;
 import com.example.ecommerce.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -49,6 +56,8 @@ public class OrderServiceImpl implements OrderService{
     private InventoryMovementRepository inventoryMovementRepository;
     @Autowired
     private InventoryMovementService inventoryMovementService;
+    @Autowired
+    private MongoTemplate mongoTemplate;
 
     @Override
     public String placeOrderAndInitiatePayment(String orderId,  OrderRequest request){
@@ -200,6 +209,27 @@ public class OrderServiceImpl implements OrderService{
             orderRepository.save(order);
             paymentRepository.save(payment);
         }
+    }
+
+    @Override
+    public @Nullable Page<OrderResponse> getOrders(String search, Pageable pageable) {
+        Query query = new Query().with(pageable);
+
+        if (search != null && !search.isBlank()) {
+            String regexPattern = ".*" + search + ".*";
+
+            Criteria criteria = new Criteria().orOperator(
+                    Criteria.where("orderId").regex(regexPattern, "i"),
+                    Criteria.where("category").regex(regexPattern, "i")
+            );
+
+            query.addCriteria(criteria);
+        }
+
+        List<Order> orders = mongoTemplate.find(query, Order.class);
+        long count = mongoTemplate.count(query.skip(-1).limit(-1), Order.class);
+        return PageableExecutionUtils.getPage(orders, pageable, () -> count)
+                .map(this::mapToOrderResponse);
     }
 
 }

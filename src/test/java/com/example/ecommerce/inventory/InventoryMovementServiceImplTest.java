@@ -40,19 +40,18 @@ class InventoryMovementServiceImplTest {
     @Test
     void restockProduct() {
         ProductRequest productRequest = ProductRequest.builder()
-                .productName("BEANS")
+                .productName("rice")
                 .category("white")
                 .description("mudu")
-                .price(new BigDecimal("2000"))
-                .sku("BHM21")
+                .price(new BigDecimal("1000"))
+                .sku("BM21")
                 .stockQuantity(10)
                 .build();
-        productService.createProduct(productRequest);
+        ProductResponse saved = productService.createProduct(productRequest);
 
         Pageable pageable = PageRequest.of(0,10, Sort.by("price").ascending());
-        Page<ProductResponse> productPage = productService.getProducts("BEANS",pageable);
+        Page<ProductResponse> productPage = productService.getProducts("rice",pageable);
 
-        ProductResponse saved = productPage.getContent().get(0);
         assertEquals(0,inventoryMovementRepository.findAll().size());
         inventoryMovementService.restockProduct(saved.getProductId(), 30);
         assertEquals(1,inventoryMovementRepository.findAll().size());
