@@ -51,27 +51,29 @@ public class OrderServiceImpl implements OrderService{
     private InventoryMovementService inventoryMovementService;
 
     @Override
-    public String placeOrderAndInitiatePayment(String orderId, aaaaS        ww                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              OrderRequest request) {
-        String email = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName();
+    public String placeOrderAndInitiatePayment(String orderId,  OrderRequest request){
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+            String email = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName();
 
-        BigDecimal totalAmount = calculateTotal(request);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        Order order = savePendingOrder(request, user, totalAmount);
+            BigDecimal totalAmount = calculateTotal(request);
 
-        String reference = paymentGatewayService.initiatePayment(
-                order.getTotalAmount(), "USD", order.getId());
+            Order order = savePendingOrder(request, user, totalAmount);
 
-        Payment payment = Payment.builder()
-                .orderId(order.getId())
-                .reference(reference)
-                .status(PaymentStatus.PENDING)
-                .build();
-        paymentRepository.save(payment);
+            String reference = paymentGatewayService.initiatePayment(
+                    order.getTotalAmount(), "USD", order.getId());
 
-        return reference;
+            Payment payment = Payment.builder()
+                    .orderId(order.getId())
+                    .reference(reference)
+                    .status(PaymentStatus.PENDING)
+                    .build();
+            paymentRepository.save(payment);
+
+            return reference;
+
     }
 
     private Order savePendingOrder(OrderRequest request, User user, BigDecimal totalAmount) {

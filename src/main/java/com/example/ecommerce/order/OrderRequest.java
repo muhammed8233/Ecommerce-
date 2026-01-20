@@ -13,6 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 public class OrderRequest {
     private String productId;
-    private int quantity;
+    private Integer quantity;
     private List<OrderItemRequest> itemList;
 }

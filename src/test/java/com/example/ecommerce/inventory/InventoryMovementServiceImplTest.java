@@ -5,6 +5,7 @@ import com.example.ecommerce.product.ProductRequest;
 import com.example.ecommerce.product.ProductResponse;
 import com.example.ecommerce.product.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,29 +31,35 @@ class InventoryMovementServiceImplTest {
     @Autowired
     private InventoryMovementRepository inventoryMovementRepository;
 
+    @BeforeEach
+    void setup(){
+        inventoryMovementRepository.deleteAll();
+    }
+
+
     @Test
     void restockProduct() {
         ProductRequest productRequest = ProductRequest.builder()
-                .productName("bread")
-                .category("medium")
-                .description("family size")
+                .productName("BEANS")
+                .category("white")
+                .description("mudu")
                 .price(new BigDecimal("2000"))
-                .sku("BHM")
-                .stockQuantity(1)
+                .sku("BHM21")
+                .stockQuantity(10)
                 .build();
         productService.createProduct(productRequest);
 
         Pageable pageable = PageRequest.of(0,10, Sort.by("price").ascending());
-        Page<ProductResponse> productPage = productService.getProducts("bread",pageable);
+        Page<ProductResponse> productPage = productService.getProducts("BEANS",pageable);
 
         ProductResponse saved = productPage.getContent().get(0);
         assertEquals(0,inventoryMovementRepository.findAll().size());
-        inventoryMovementService.restockProduct(saved.getProductId(), 20);
+        inventoryMovementService.restockProduct(saved.getProductId(), 30);
         assertEquals(1,inventoryMovementRepository.findAll().size());
 
 
         Product updatedProduct = productService.findProductById(saved.getProductId());
-        assertEquals(21, updatedProduct.getStockQuantity());
+        assertEquals(40, updatedProduct.getStockQuantity());
 
     }
 }
