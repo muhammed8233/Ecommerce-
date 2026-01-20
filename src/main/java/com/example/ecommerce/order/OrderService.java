@@ -2,7 +2,7 @@ package com.example.ecommerce.order;
 
 public interface OrderService {
 
-    String placeOrderAndInitiatePayment(OrderRequest request);
+    String placeOrderAndInitiatePayment(String orderId, OrderRequest request);
 
     OrderResponse placeOrder(OrderRequest request);
 

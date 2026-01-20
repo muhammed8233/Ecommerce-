@@ -23,7 +23,7 @@ public class OrderController {
 
     @PostMapping("/{orderId}/initiate-payment")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<String> initiatePayment(@PathVariable String orderId,
+    public ResponseEntity<String> initiatePayment(@PathVariable("orderId") String orderId,
                                                    @RequestBody OrderRequest request){
         String payment =orderService.placeOrderAndInitiatePayment(orderId, request);
         return ResponseEntity.ok(payment);
