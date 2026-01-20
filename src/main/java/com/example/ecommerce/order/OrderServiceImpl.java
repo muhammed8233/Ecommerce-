@@ -219,8 +219,8 @@ public class OrderServiceImpl implements OrderService{
             String regexPattern = ".*" + search + ".*";
 
             Criteria criteria = new Criteria().orOperator(
-                    Criteria.where("orderId").regex(regexPattern, "i"),
-                    Criteria.where("category").regex(regexPattern, "i")
+                    Criteria.where("_id").regex(regexPattern, "i"),
+                    Criteria.where("userId").regex(regexPattern, "i")
             );
 
             query.addCriteria(criteria);

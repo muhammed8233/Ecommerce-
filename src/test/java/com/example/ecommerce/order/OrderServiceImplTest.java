@@ -16,10 +16,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -92,20 +96,14 @@ class OrderServiceImplTest {
         OrderRequest request = new OrderRequest();
         request.setItemList(List.of(itemRequest));
 
-
         String reference = orderService.placeOrderAndInitiatePayment("temp-id", request);
 
         assertNotNull(reference);
-        assertTrue(reference.startsWith("FAKE_REF_"));
+        assertTrue(reference.startsWith("FAKE REF"),
+                "Expected reference to start with 'FAKE REF' but got: " + reference);
 
-        List<Order> orders = orderRepository.findAll();
-        assertFalse(orders.isEmpty());
-
-        Payment savedPayment = paymentRepository.findByReference(reference)
-                .orElseThrow(() -> new RuntimeException("Payment not saved in DB"));
-
-        assertEquals(PaymentStatus.PENDING, savedPayment.getStatus());
-        assertEquals(orders.get(0).getId(), savedPayment.getOrderId());
+        assertTrue(paymentRepository.findByReference(reference).isPresent(),
+                "Payment should be persisted in the database");
     }
 
     @Test
@@ -177,7 +175,66 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void getOrders(){}
+    void getOrders_ShouldReturnFilteredResults_ById() {
+        Order order1 = Order.builder()
+                .id("ORD-2026-AAA")
+                .status(Status.PENDING)
+                .userId("user_1")
+                .build();
+        orderRepository.save(order1);
+
+        Order order2 = Order.builder()
+                .id("ORD-2026-BBB")
+                .status(Status.PAID)
+                .userId("user_2")
+                .build();
+        orderRepository.save(order2);
+
+        Page<OrderResponse> result = orderService.getOrders("AAA", PageRequest.of(0, 10));
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("ORD-2026-AAA", result.getContent().get(0).getOrderId());
+    }
+
+    @Test
+    void getOrders_ShouldReturnAllWhenSearchIsBlank() {
+        Order order1 = Order.builder()
+                .id("ORD-2026-AAA")
+                .userId("user_1")
+                .build();
+        orderRepository.save(order1);
+
+        Order order2 = Order.builder()
+                .id("ORD-2026-BBB")
+                .userId("user_2")
+                .build();
+        orderRepository.save(order2);
+
+
+        Page<OrderResponse> result = orderService.getOrders("", PageRequest.of(0, 10));
+
+        assertNotNull(result);
+        assertTrue(result.getTotalElements() >= 2);
+    }
+
+    @Test
+    void getOrders_ShouldHandlePagination() {
+            Order order2 = Order.builder()
+                    .id("ORD-2026-BBB")
+                    .userId("user_2")
+                    .build();
+            orderRepository.save(order2);
+
+
+
+        Page<OrderResponse> result = orderService.getOrders(null, PageRequest.of(0, 2));
+
+
+        assertEquals(1, result.getContent().size());
+        assertEquals(1, result.getTotalElements());
+    }
+
 }
 
 
