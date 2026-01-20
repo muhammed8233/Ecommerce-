@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Setter
@@ -27,7 +28,10 @@ public class Order {
 
 
     public void addOrderItem(OrderItem orderItem) {
-
+        if (this.items == null) {
+            this.items = new ArrayList<>();
+        }
+        this.items.add(orderItem);
 
     }
 }

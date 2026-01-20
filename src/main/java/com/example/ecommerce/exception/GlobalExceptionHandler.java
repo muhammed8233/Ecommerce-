@@ -1,6 +1,8 @@
 package com.example.ecommerce.exception;
 
 import com.mongodb.MongoCommandException;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -59,5 +61,23 @@ public class GlobalExceptionHandler {
         body.put("status", HttpStatus.BAD_REQUEST.value());
         body.put("validationErrors", fieldErrors);
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(io.jsonwebtoken.security.SignatureException.class)
+    public ResponseEntity<Map<String, Object>> handleSignatureException(SignatureException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Your session has expired or the security key has changed. Please log in again.");
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleAll(Exception ex) {
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<Map<String, Object>> handleExpiredJwt(ExpiredJwtException ex) {
+        return buildErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                "Your session has expired. Please log in again."
+        );
     }
 }

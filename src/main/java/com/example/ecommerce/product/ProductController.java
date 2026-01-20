@@ -31,13 +31,15 @@ public class ProductController {
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
     public  ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request){
+
+        System.out.println("Adding product: " + request.getProductName());
         ProductResponse create = productService.createProduct(request);
         return new ResponseEntity<>(create, HttpStatus.CREATED);
     }
 
     @PutMapping("/{productId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductResponse> updateProduct(@PathVariable("studentId") String productId,
+    public ResponseEntity<ProductResponse> updateProduct(@PathVariable("productId") String productId,
                                                          @Valid @RequestBody ProductRequest request){
         ProductResponse update = productService.updateProduct(productId, request);
         return ResponseEntity.ok(update);

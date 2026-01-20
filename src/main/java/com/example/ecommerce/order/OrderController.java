@@ -9,7 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping(path = ",ap1/v1/orders")
+@RequestMapping(path = "api/v1/orders")
 @RequiredArgsConstructor
 public class OrderController {
    @Autowired
@@ -23,8 +23,9 @@ public class OrderController {
 
     @PostMapping("/{orderId}/initiate-payment")
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<String> initiatePayment(@PathVariable OrderRequest request){
-        String payment =orderService.placeOrderAndInitiatePayment(request);
+    public ResponseEntity<String> initiatePayment(@PathVariable String orderId,
+                                                   @RequestBody OrderRequest request){
+        String payment =orderService.placeOrderAndInitiatePayment(orderId, request);
         return ResponseEntity.ok(payment);
     }
 

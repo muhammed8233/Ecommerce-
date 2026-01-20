@@ -62,7 +62,7 @@ public class OrderServiceImpl implements OrderService{
         Order order = savePendingOrder(request, user, totalAmount);
 
         String reference = paymentGatewayService.initiatePayment(
-                order.getTotalAmount(), "USD", order.getId().toString());
+                order.getTotalAmount(), "USD", order.getId());
 
         Payment payment = Payment.builder()
                 .orderId(order.getId())
@@ -80,6 +80,7 @@ public class OrderServiceImpl implements OrderService{
                 .userId(user.getId())
                 .status(Status.PENDING)
                 .totalAmount(totalAmount)
+                .createdAt(LocalDateTime.now())
                 .items(new ArrayList<>())
                 .build();
 
@@ -92,6 +93,7 @@ public class OrderServiceImpl implements OrderService{
 
                     OrderItem orderItem = OrderItem.builder()
                             .productId(product.getId())
+                            .name(product.getProductName())
                             .quantity(orderItemRequest.getQuantity())
                             .unitPrice(product.getPrice())
                             .build();
@@ -102,15 +104,26 @@ public class OrderServiceImpl implements OrderService{
         return orderRepository.save(order);
     }
 
-    private OrderResponse mapToOrderResponse(Order order){
+    private OrderResponse mapToOrderResponse(Order order) {
+        // 1. Check if items exist to avoid IndexOutOfBoundsException
+        OrderItem firstItem = (order.getItems() != null && !order.getItems().isEmpty())
+                ? order.getItems().get(0)
+                : null;
+
         return OrderResponse.builder()
                 .orderId(order.getId())
-                .productName(order.getUserId())
+                // FIX: Map from the item, not the order
+                .productName(firstItem != null ? firstItem.getName() : "Multiple Items")
+                .quantity(firstItem != null ? firstItem.getQuantity() : 0)
+                .unitPrice(firstItem != null ? firstItem.getUnitPrice() : null)
+                // These are already working
+                .totalAmount(order.getTotalAmount())
                 .status(order.getStatus())
                 .createdAt(order.getCreatedAt())
                 .build();
-
     }
+
+
 
     @Override
     public OrderResponse placeOrder(OrderRequest request) {
