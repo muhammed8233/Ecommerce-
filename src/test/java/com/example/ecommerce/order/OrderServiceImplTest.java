@@ -1,6 +1,11 @@
 package com.example.ecommerce.order;
 
 import com.example.ecommerce.exception.InsufficientStockException;
+import com.example.ecommerce.exception.PaymentNotFoundException;
+import com.example.ecommerce.payment.Payment;
+import com.example.ecommerce.payment.PaymentGatewayService;
+import com.example.ecommerce.payment.PaymentRepository;
+import com.example.ecommerce.payment.PaymentStatus;
 import com.example.ecommerce.product.Product;
 import com.example.ecommerce.product.ProductRepository;
 import com.example.ecommerce.user.Role;
@@ -34,6 +39,10 @@ class OrderServiceImplTest {
     private OrderRepository orderRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PaymentRepository paymentRepository;
+    @Autowired
+    private PaymentGatewayService paymentGatewayService;
 
     private String savedProductId;
 
@@ -42,6 +51,7 @@ class OrderServiceImplTest {
         orderRepository.deleteAll();
         userRepository.deleteAll();
         productRepository.deleteAll();
+        paymentRepository.deleteAll();
 
         User user = new User();
         user.setEmail("limanasmau@ghost.com");
@@ -73,8 +83,29 @@ class OrderServiceImplTest {
 
 
     @Test
-    void placeOrderAndInitiatePayment() {
+    void testPlaceOrderAndInitiatePayment_Success() {
+        OrderItemRequest itemRequest = new OrderItemRequest();
+        itemRequest.setProductId(savedProductId);
+        itemRequest.setQuantity(2);
 
+
+        OrderRequest request = new OrderRequest();
+        request.setItemList(List.of(itemRequest));
+
+
+        String reference = orderService.placeOrderAndInitiatePayment("temp-id", request);
+
+        assertNotNull(reference);
+        assertTrue(reference.startsWith("FAKE_REF_"));
+
+        List<Order> orders = orderRepository.findAll();
+        assertFalse(orders.isEmpty());
+
+        Payment savedPayment = paymentRepository.findByReference(reference)
+                .orElseThrow(() -> new RuntimeException("Payment not saved in DB"));
+
+        assertEquals(PaymentStatus.PENDING, savedPayment.getStatus());
+        assertEquals(orders.get(0).getId(), savedPayment.getOrderId());
     }
 
     @Test
@@ -115,9 +146,39 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void finalizeTransaction() {
+    void testFinalizeTransaction_RealDatabase_Success() {
+        Order order = new Order();
+        order.setStatus(Status.PENDING);
+        Order savedOrder = orderRepository.save(order);
+
+        Payment payment = new Payment();
+        payment.setReference("REF-2026");
+        payment.setOrderId(savedOrder.getId());
+        payment.setStatus(PaymentStatus.PENDING);
+        paymentRepository.save(payment);
+
+        orderService.finalizeTransaction("REF-2026");
+
+        Order updatedOrder = orderRepository.findById(savedOrder.getId())
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        Payment updatedPayment = paymentRepository.findByReference("REF-2026")
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+        assertEquals(Status.PAID, updatedOrder.getStatus());
+        assertEquals(PaymentStatus.SUCCESS, updatedPayment.getStatus());
+        assertNotNull(updatedPayment.getTime());
+    }
+
+    @Test
+    void testFinalizeTransaction_ThrowsPaymentNotFound() {
+        assertThrows(PaymentNotFoundException.class, () -> {
+            orderService.finalizeTransaction("NON-EXISTENT-REF");
+        });
     }
 
     @Test
     void getOrders(){}
 }
+
+
+
