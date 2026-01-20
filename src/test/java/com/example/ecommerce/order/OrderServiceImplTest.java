@@ -121,11 +121,11 @@ class OrderServiceImplTest {
         assertNotNull(response.getOrderId());
         assertEquals("Bread", response.getProductName());
         assertEquals(5, response.getQuantity());
-        assertEquals(new BigDecimal("10000.00"), response.getTotalAmount()); // 2000 * 5
+        assertEquals(new BigDecimal("10000.00"), response.getTotalAmount());
         assertEquals(Status.PENDING, response.getStatus());
 
         Product updatedProduct = productRepository.findById(savedProductId).get();
-        assertEquals(15, updatedProduct.getStockQuantity(), "Stock should be reduced from 20 to 15");
+        assertEquals(15, updatedProduct.getStockQuantity());
     }
 
     @Test
@@ -144,7 +144,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void testFinalizeTransaction_RealDatabase_Success() {
+    void testFinalizeTransactionToReturnSuccess() {
         Order order = new Order();
         order.setStatus(Status.PENDING);
         Order savedOrder = orderRepository.save(order);

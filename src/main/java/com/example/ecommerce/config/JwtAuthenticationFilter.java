@@ -1,6 +1,6 @@
 package com.example.ecommerce.config;
 
-import com.example.ecommerce.service.JwtService;
+import com.example.ecommerce.service.JwtServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,12 +20,12 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
+    private final JwtServiceImpl jwtService;
     private final UserDetailsService userDetailsService;
-    private final HandlerExceptionResolver resolver; // Add this
+    private final HandlerExceptionResolver resolver;
 
     public JwtAuthenticationFilter(
-            JwtService jwtService,
+            JwtServiceImpl jwtService,
             UserDetailsService userDetailsService,
             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
         this.jwtService = jwtService;
@@ -58,7 +58,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } catch (Exception ex) {
-            // This forwards the exception to your GlobalExceptionHandler
             resolver.resolveException(request, response, null, ex);
         }
     }

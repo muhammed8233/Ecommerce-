@@ -1,12 +1,10 @@
 package com.example.ecommerce.auth;
 
-import com.example.ecommerce.service.JwtService;
+import com.example.ecommerce.service.JwtServiceImpl;
 import com.example.ecommerce.user.Role;
 import com.example.ecommerce.user.User;
 import com.example.ecommerce.user.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,7 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private final JwtService jwtService;
+    private final JwtServiceImpl jwtService;
     private  final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
