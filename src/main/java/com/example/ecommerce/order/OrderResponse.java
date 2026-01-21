@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Setter
 @Getter
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class OrderResponse {
     private String orderId;
-    private String productName;
+    private List<OrderItemResponse> items;
     private Integer quantity;
     private BigDecimal unitPrice;
     private BigDecimal totalAmount;
