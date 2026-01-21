@@ -23,7 +23,6 @@ public class Order {
     private Status status;
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
-
     private List<OrderItem> items;
 
 

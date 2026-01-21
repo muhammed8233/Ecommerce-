@@ -16,10 +16,8 @@ import java.util.List;
 public class OrderResponse {
     private String orderId;
     private List<OrderItemResponse> items;
-    private Integer quantity;
-    private BigDecimal unitPrice;
     private BigDecimal totalAmount;
     private Status status;
     private LocalDateTime createdAt;
-    private String trackingNumber;
+
 }

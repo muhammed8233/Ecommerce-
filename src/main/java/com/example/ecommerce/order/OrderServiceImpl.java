@@ -116,18 +116,17 @@ public class OrderServiceImpl implements OrderService{
     }
 
     private OrderResponse mapToOrderResponse(Order order) {
-        // 1. Check if items exist to avoid IndexOutOfBoundsException
-        OrderItem firstItem = (order.getItems() != null && !order.getItems().isEmpty())
-                ? order.getItems().get(0)
-                : null;
+        List<OrderItemResponse> itemResponses = order.getItems().stream()
+                .map(item -> OrderItemResponse.builder()
+                        .productName(item.getName())
+                        .quantity(item.getQuantity())
+                        .unitPrice(item.getUnitPrice())
+                        .build())
+                .toList();
 
         return OrderResponse.builder()
                 .orderId(order.getId())
-                // FIX: Map from the item, not the order
-                .productName(firstItem != null ? firstItem.getName() : "Multiple Items")
-                .quantity(firstItem != null ? firstItem.getQuantity() : 0)
-                .unitPrice(firstItem != null ? firstItem.getUnitPrice() : null)
-                // These are already working
+                .items(itemResponses)
                 .totalAmount(order.getTotalAmount())
                 .status(order.getStatus())
                 .createdAt(order.getCreatedAt())
