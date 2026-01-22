@@ -4,7 +4,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -12,6 +11,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.math.BigDecimal;
 
@@ -37,7 +38,7 @@ public class Product {
     private String sku;
 
     @PositiveOrZero(message = "price must be positive")
-    @Field(targetType = org.springframework.data.mongodb.core.mapping.FieldType.DECIMAL128)
+    @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal price;
 
     @PositiveOrZero(message = "stock quantity must be positive")

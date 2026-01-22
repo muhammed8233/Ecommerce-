@@ -1,5 +1,6 @@
 package com.example.ecommerce.auth;
 
+import com.example.ecommerce.exception.UserAlreadyExistException;
 import com.example.ecommerce.service.JwtServiceImpl;
 import com.example.ecommerce.user.Role;
 import com.example.ecommerce.user.User;
@@ -22,6 +23,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse register(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new UserAlreadyExistException("Email already exists");
+        }
         Role assignedRole = request.getEmail().endsWith("@ghost.com") ? Role.ADMIN : Role.USER;
 
         User user = User
