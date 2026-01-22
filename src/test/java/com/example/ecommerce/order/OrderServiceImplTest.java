@@ -99,11 +99,9 @@ class OrderServiceImplTest {
         String reference = orderService.placeOrderAndInitiatePayment("temp-id", request);
 
         assertNotNull(reference);
-        assertTrue(reference.startsWith("FAKE REF"),
-                "Expected reference to start with 'FAKE REF' but got: " + reference);
+        assertTrue(reference.startsWith("FAKE REF"));
 
-        assertTrue(paymentRepository.findByReference(reference).isPresent(),
-                "Payment should be persisted in the database");
+        assertTrue(paymentRepository.findByReference(reference).isPresent());
     }
 
     @Test
