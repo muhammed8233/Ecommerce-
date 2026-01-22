@@ -31,10 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -115,25 +112,6 @@ public class OrderServiceImpl implements OrderService{
         return orderRepository.save(order);
     }
 
-    private OrderResponse mapToOrderResponse(Order order) {
-        List<OrderItemResponse> itemResponses = order.getItems().stream()
-                .map(item -> OrderItemResponse.builder()
-                        .productName(item.getName())
-                        .quantity(item.getQuantity())
-                        .unitPrice(item.getUnitPrice())
-                        .build())
-                .toList();
-
-        return OrderResponse.builder()
-                .orderId(order.getId())
-                .items(itemResponses)
-                .totalAmount(order.getTotalAmount())
-                .status(order.getStatus())
-                .createdAt(order.getCreatedAt())
-                .build();
-    }
-
-
 
     @Override
     public OrderResponse placeOrder(OrderRequest request) {
@@ -213,22 +191,42 @@ public class OrderServiceImpl implements OrderService{
     @Override
     public @Nullable Page<OrderResponse> getOrders(String search, Pageable pageable) {
         Query query = new Query().with(pageable);
-
-        if (search != null && !search.isBlank()) {
-            String regexPattern = ".*" + search + ".*";
+        if (search != null && !search.isBlank()){
+            String regexPattern = ".*"+ search +".*";
 
             Criteria criteria = new Criteria().orOperator(
                     Criteria.where("_id").regex(regexPattern, "i"),
-                    Criteria.where("userId").regex(regexPattern, "i")
-            );
-
+                    Criteria.where("userId").regex(regexPattern,"i"));
             query.addCriteria(criteria);
         }
 
         List<Order> orders = mongoTemplate.find(query, Order.class);
-        long count = mongoTemplate.count(query.skip(-1).limit(-1), Order.class);
+
+        Long count = mongoTemplate.count(query.skip(-1).limit(-1), Order.class);
+
         return PageableExecutionUtils.getPage(orders, pageable, () -> count)
                 .map(this::mapToOrderResponse);
     }
+
+    private OrderResponse mapToOrderResponse(Order order) {
+        List<OrderItemResponse> itemResponses = (order.getItems() == null)
+                ? Collections.emptyList()
+                : order.getItems().stream()
+                .map(item -> OrderItemResponse.builder()
+                        .productName(item.getName())
+                        .quantity(item.getQuantity())
+                        .unitPrice(item.getUnitPrice())
+                        .build())
+                .toList();
+
+        return OrderResponse.builder()
+                .orderId(order.getId())
+                .items(itemResponses)
+                .totalAmount(order.getTotalAmount())
+                .status(order.getStatus())
+                .createdAt(order.getCreatedAt())
+                .build();
+    }
+
 
 }

@@ -119,8 +119,8 @@ class OrderServiceImplTest {
         OrderResponse response = orderService.placeOrder(request);
 
         assertNotNull(response.getOrderId());
-        assertEquals("Bread", response.getProductName());
-        assertEquals(5, response.getQuantity());
+        assertEquals("Bread", response.getItems().getFirst().getProductName());
+        assertEquals(5, response.getItems().getFirst().getQuantity());
         assertEquals(new BigDecimal("10000.00"), response.getTotalAmount());
         assertEquals(Status.PENDING, response.getStatus());
 
@@ -189,7 +189,7 @@ class OrderServiceImplTest {
                 .userId("user_2")
                 .build();
         orderRepository.save(order2);
-
+        System.out.println(orderRepository.findAll());
         Page<OrderResponse> result = orderService.getOrders("AAA", PageRequest.of(0, 10));
 
         assertNotNull(result);
@@ -211,7 +211,7 @@ class OrderServiceImplTest {
                 .build();
         orderRepository.save(order2);
 
-
+        assertEquals(2, orderRepository.findAll().size());
         Page<OrderResponse> result = orderService.getOrders("", PageRequest.of(0, 10));
 
         assertNotNull(result);
