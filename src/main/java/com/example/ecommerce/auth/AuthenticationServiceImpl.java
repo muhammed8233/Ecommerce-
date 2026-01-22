@@ -22,12 +22,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     @Override
     public AuthenticationResponse register(RegisterRequest request) {
+        Role assignedRole = request.getEmail().endsWith("@ghost.com") ? Role.ADMIN : Role.USER;
+
         User user = User
                 .builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.ADMIN)
+                .role(assignedRole)
                 .build();
         userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);

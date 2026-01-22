@@ -32,7 +32,6 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     public  ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request){
 
-        System.out.println("Adding product: " + request.getProductName());
         ProductResponse create = productService.createProduct(request);
         return new ResponseEntity<>(create, HttpStatus.CREATED);
     }
