@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -78,9 +79,13 @@ public class GlobalExceptionHandler {
         if (ex instanceof ResponseStatusException rse) {
             status = HttpStatus.resolve(rse.getStatusCode().value());
         }
+        else if (ex.getClass().isAnnotationPresent(ResponseStatus.class)) {
+            status = ex.getClass().getAnnotation(ResponseStatus.class).value();
+        }
 
-        return buildErrorResponse(status, ex.getMessage());
+        return buildErrorResponse(status != null ? status : HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
+
 
     @ExceptionHandler(ExpiredJwtException.class)
     public ResponseEntity<Map<String, Object>> handleExpiredJwt(ExpiredJwtException ex) {
@@ -89,11 +94,18 @@ public class GlobalExceptionHandler {
                 "Your session has expired. Please log in again."
         );
     }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage()));
-        return ResponseEntity.badRequest().body(errors);
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("validationErrors", errors);
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 }
