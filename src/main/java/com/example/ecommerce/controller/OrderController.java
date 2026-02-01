@@ -3,6 +3,7 @@ package com.example.ecommerce.controller;
 import com.example.ecommerce.dtos.OrderRequestDto;
 import com.example.ecommerce.dtos.OrderResponseDto;
 import com.example.ecommerce.service.OrderService;
+import com.example.ecommerce.service.PaymentGatewayService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,8 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
    @Autowired
    private OrderService orderService;
+   @Autowired
+   private PaymentGatewayService paymentGatewayService;
 
    @PostMapping("/place")
    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
@@ -37,7 +40,7 @@ public class OrderController {
 
    @PostMapping("/verify-payment")
    public ResponseEntity<String> verifyPayment(@RequestParam String reference){
-       orderService.markAsPaid(reference);
+       paymentGatewayService.processPaymentStatus(reference);
        return ResponseEntity.ok("verified successfully");
    }
 

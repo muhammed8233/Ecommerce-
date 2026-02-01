@@ -51,7 +51,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     public void processPaymentStatus(String reference) {
         PaymentStatus status = checkPaymentStatus(reference);
         Payment payment = findByReference(reference);
-
+        System.out.println("Updating payment for ref: " + reference);
         if (status == PaymentStatus.SUCCESS) {
             payment.setStatus(PaymentStatus.SUCCESS);
             payment.setTime(LocalDateTime.now());

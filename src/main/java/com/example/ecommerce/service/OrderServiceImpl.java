@@ -110,9 +110,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void markAsPaid(String reference) {
-        Payment payment = paymentGatewayService.findByReference(reference);
-        Order order = findById(payment.getOrderId());
+    public void markAsPaid(String orderId) {
+        Order order = findById(orderId);
         order.setStatus(Status.PAID);
         orderRepository.save(order);
     }

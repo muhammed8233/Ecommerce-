@@ -14,7 +14,7 @@ public interface OrderService {
 
     OrderResponseDto placeOrder(OrderRequestDto request);
 
-     void markAsPaid(String reference);
+     void markAsPaid(String orderId);
 
     @Nullable Page<OrderResponseDto> getOrders(String search, Pageable pageable);
 
