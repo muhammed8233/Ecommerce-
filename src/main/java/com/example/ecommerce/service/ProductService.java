@@ -21,5 +21,7 @@ public interface ProductService {
     Product findById(String productId);
 
     List<Product> findAllById(List<String> productIds);
+
+    void deleteAll();
 }
 

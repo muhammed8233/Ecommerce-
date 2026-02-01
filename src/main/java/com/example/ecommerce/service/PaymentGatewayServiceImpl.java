@@ -60,4 +60,9 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
             orderService.markAsPaid(payment.getOrderId());
         }
     }
+
+    @Override
+    public void deleteAll() {
+        paymentRepository.deleteAll();
+    }
 }

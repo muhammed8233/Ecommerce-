@@ -3,13 +3,12 @@ package com.example.ecommerce.service;
 import com.example.ecommerce.dtos.AuthenticationRequestDto;
 import com.example.ecommerce.dtos.AuthenticationResponseDto;
 import com.example.ecommerce.dtos.RegisterRequestDto;
-import com.example.ecommerce.exception.UserAlreadyExistException;
 import com.example.ecommerce.Enum.Role;
 import com.example.ecommerce.model.User;
-import com.example.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -19,25 +18,21 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final JwtService jwtService;
     private  final PasswordEncoder passwordEncoder;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final AuthenticationManager authenticationManager;
 
 
     @Override
     public AuthenticationResponseDto register(RegisterRequestDto request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserAlreadyExistException("Email already exists");
-        }
 
-        User user = User
+        RegisterRequestDto user = RegisterRequestDto
                 .builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
                 .build();
-        userRepository.save(user);
-        String jwtToken = jwtService.generateToken(user);
+        User saved = userService.saveUser(user);
+        String jwtToken = jwtService.generateToken(saved);
         return AuthenticationResponseDto
                 .builder()
                 .token(jwtToken)
@@ -52,7 +47,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                         request.getEmail(),
                         request.getPassword())
         );
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        User user = userService.findByEmail(request.getEmail());
         String jwtToken = jwtService.generateToken(user);
         return AuthenticationResponseDto
                 .builder()

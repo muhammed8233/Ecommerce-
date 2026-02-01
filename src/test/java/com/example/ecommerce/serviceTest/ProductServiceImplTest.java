@@ -1,4 +1,4 @@
-package com.example.ecommerce.product;
+package com.example.ecommerce.serviceTest;
 
 import com.example.ecommerce.dtos.ProductRequestDto;
 import com.example.ecommerce.dtos.ProductResponseDto;
@@ -42,9 +42,9 @@ class ProductServiceImplTest {
                 .sku("BHM6")
                 .stockQuantity(1)
                 .build();
-        assertEquals(0, productRepository.findAll().size());
+        assertEquals(0, productRepository.count());
         productService.createProduct(productRequestDto);
-        assertEquals(1, productRepository.findAll().size());
+        assertEquals(1, productRepository.count());
     }
 
     @Test
@@ -57,9 +57,9 @@ class ProductServiceImplTest {
                 .sku("BHM9")
                 .stockQuantity(1)
                 .build();
-        assertEquals(0, productRepository.findAll().size());
+        assertEquals(0, productRepository.count());
         ProductResponseDto saveProduct = productService.createProduct(productRequestDto);
-        assertEquals(1, productRepository.findAll().size());
+        assertEquals(1, productRepository.count());
 
         ProductRequestDto request = ProductRequestDto.builder()
                 .productName("yam")
@@ -69,9 +69,9 @@ class ProductServiceImplTest {
                 .sku("BHM8")
                 .stockQuantity(1)
                 .build();
-        assertEquals(1, productRepository.findAll().size());
+        assertEquals(1, productRepository.count());
        ProductResponseDto result = productService.updateProduct(saveProduct.getProductId(),request);
-        assertEquals(1, productRepository.findAll().size());
+        assertEquals(1, productRepository.count());
 
         assertEquals("yam", result.getProductName());
         assertEquals("BHM8", result.getSku());

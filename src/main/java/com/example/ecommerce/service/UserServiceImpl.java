@@ -1,5 +1,8 @@
 package com.example.ecommerce.service;
 
+import com.example.ecommerce.Enum.Role;
+import com.example.ecommerce.dtos.RegisterRequestDto;
+import com.example.ecommerce.exception.UserAlreadyExistException;
 import com.example.ecommerce.model.User;
 import com.example.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +30,27 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public User findByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow();
+        return userRepository.findByEmail(email)
+                .orElseThrow(()-> new UsernameNotFoundException("user with email: "+ email + " not found"));
+    }
+
+    @Override
+    public void deleteAll() {
+        userRepository.deleteAll();
+    }
+
+    @Override
+    public User saveUser(RegisterRequestDto userDto) {
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new UserAlreadyExistException("Email already exists");
+        }
+
+        User user = new User();
+        user.setEmail(userDto.getEmail());
+        user.setName(userDto.getName());
+        user.setPassword(userDto.getPassword());
+        user.setRole(Role.USER);
+
+        return userRepository.save(user);
     }
 }

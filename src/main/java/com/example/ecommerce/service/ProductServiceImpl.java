@@ -111,4 +111,9 @@ public class ProductServiceImpl implements ProductService {
         }
         return productRepository.findAllById(productIds);
     }
+
+    @Override
+    public void deleteAll() {
+        productRepository.deleteAll();
+    }
 }

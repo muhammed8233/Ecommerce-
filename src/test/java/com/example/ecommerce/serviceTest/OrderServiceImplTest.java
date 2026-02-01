@@ -1,25 +1,14 @@
-package com.example.ecommerce.order;
+package com.example.ecommerce.serviceTest;
 
 import com.example.ecommerce.Enum.Status;
-import com.example.ecommerce.dtos.OrderItemRequestDto;
-import com.example.ecommerce.dtos.OrderRequestDto;
-import com.example.ecommerce.dtos.OrderResponseDto;
+import com.example.ecommerce.dtos.*;
 import com.example.ecommerce.exception.InsufficientStockException;
-import com.example.ecommerce.exception.PaymentNotFoundException;
 import com.example.ecommerce.model.Order;
 import com.example.ecommerce.model.Payment;
-import com.example.ecommerce.service.JwtService;
-import com.example.ecommerce.service.PaymentGatewayService;
+import com.example.ecommerce.service.*;
 import com.example.ecommerce.repository.OrderRepository;
-import com.example.ecommerce.repository.PaymentRepository;
 import com.example.ecommerce.Enum.PaymentStatus;
 import com.example.ecommerce.model.Product;
-import com.example.ecommerce.repository.ProductRepository;
-import com.example.ecommerce.Enum.Role;
-import com.example.ecommerce.model.User;
-import com.example.ecommerce.repository.UserRepository;
-import com.example.ecommerce.service.OrderService;
-import com.example.ecommerce.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +33,7 @@ class OrderServiceImplTest {
     @Autowired
     private OrderService orderService;
     @Autowired
-    private ProductRepository productRepository;
+    private ProductService productService;
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
@@ -58,13 +47,14 @@ class OrderServiceImplTest {
     void setUp() {
         orderRepository.deleteAll();
         userService.deleteAll();
-        productRepository.deleteAll();
+        productService.deleteAll();
         paymentGatewayService.deleteAll();
 
-        User user = new User();
+        RegisterRequestDto user = new RegisterRequestDto();
+        user.setName("Admin user");
         user.setEmail("limanasmau@ghost.com");
-        user.setRole(Role.ADMIN);
-        userRepository.save(user);
+        user.setPassword("password123");
+        userService.saveUser(user);
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                 "limanasmau@ghost.com",
@@ -74,14 +64,14 @@ class OrderServiceImplTest {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
 
-        Product product = Product.builder()
+        ProductRequestDto product = ProductRequestDto.builder()
                 .productName("Bread")
                 .price(new BigDecimal("2000.00"))
                 .stockQuantity(20)
                 .sku("BRD01")
                 .build();
-        Product savedProduct = productRepository.save(product);
-        savedProductId = savedProduct.getId();
+        ProductResponseDto savedProduct = productService.createProduct(product);
+        savedProductId = savedProduct.getProductId();
     }
 
     @Test
@@ -127,7 +117,7 @@ class OrderServiceImplTest {
         assertEquals(new BigDecimal("10000.00"), response.getTotalAmount());
         assertEquals(Status.PENDING, response.getStatus());
 
-        Product updatedProduct = productRepository.findById(savedProductId).get();
+        Product updatedProduct = productService.findById(savedProductId);
         assertEquals(15, updatedProduct.getStockQuantity());
     }
 
@@ -152,18 +142,17 @@ class OrderServiceImplTest {
         order.setStatus(Status.PENDING);
         Order savedOrder = orderRepository.save(order);
 
-        Payment payment = new Payment();
-        payment.setReference("REF-2026");
-        payment.setOrderId(savedOrder.getId());
-        payment.setStatus(PaymentStatus.PENDING);
+        String reference = paymentGatewayService.initiatePayment(
+                savedOrder.getTotalAmount(),
+                "USD",
+                savedOrder.getId()
+        );
 
-
-        paymentGatewayService.processPaymentStatus("REF-2026");
+        paymentGatewayService.processPaymentStatus(reference);
 
         Order updatedOrder = orderRepository.findById(savedOrder.getId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));
-        Payment updatedPayment = paymentRepository.findByReference("REF-2026")
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+        Payment updatedPayment = paymentGatewayService.findByReference(reference);
 
         assertEquals(Status.PAID, updatedOrder.getStatus());
         assertEquals(PaymentStatus.SUCCESS, updatedPayment.getStatus());

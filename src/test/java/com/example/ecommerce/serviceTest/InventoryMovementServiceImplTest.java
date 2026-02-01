@@ -1,4 +1,4 @@
-package com.example.ecommerce.inventory;
+package com.example.ecommerce.serviceTest;
 
 import com.example.ecommerce.model.Product;
 import com.example.ecommerce.dtos.ProductRequestDto;

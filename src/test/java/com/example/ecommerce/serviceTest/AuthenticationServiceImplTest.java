@@ -1,12 +1,11 @@
-package com.example.ecommerce.auth;
+package com.example.ecommerce.serviceTest;
 
-import com.example.ecommerce.Enum.Role;
 import com.example.ecommerce.dtos.AuthenticationRequestDto;
 import com.example.ecommerce.dtos.AuthenticationResponseDto;
 import com.example.ecommerce.dtos.RegisterRequestDto;
 import com.example.ecommerce.model.User;
-import com.example.ecommerce.repository.UserRepository;
 import com.example.ecommerce.service.AuthenticationService;
+import com.example.ecommerce.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,14 +23,14 @@ class AuthenticationServiceImplTest {
     private AuthenticationService authService;
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll();
+        userService.deleteAll();
     }
 
     @Test
@@ -47,20 +46,19 @@ class AuthenticationServiceImplTest {
 
         assertNotNull(response.getToken());
 
-        User savedUser = userRepository.findByEmail("john@example.com").orElseThrow();
-        assertEquals("John", savedUser.getName());
+        User savedUser = userService.findByEmail("john@example.com");
+        assertEquals("john", savedUser.getName());
         assertTrue(passwordEncoder.matches("password123", savedUser.getPassword()));
     }
 
     @Test
     void authenticate_ShouldReturnToken_WhenCredentialsAreValid() {
-        User user = User.builder()
+        RegisterRequestDto user = RegisterRequestDto.builder()
                 .name("Jane")
                 .email("jane@example.com")
                 .password(passwordEncoder.encode("secret"))
-                .role(Role.USER)
                 .build();
-        userRepository.save(user);
+        userService.saveUser(user);
 
         AuthenticationRequestDto authRequest = AuthenticationRequestDto.builder()
                 .email("jane@example.com")
@@ -76,11 +74,11 @@ class AuthenticationServiceImplTest {
     @Test
     void authenticate_ShouldThrowException_WhenPasswordIsIncorrect() {
 
-        User user = User.builder()
+        RegisterRequestDto user = RegisterRequestDto.builder()
                 .email("fail@example.com")
                 .password(passwordEncoder.encode("correct-password"))
                 .build();
-        userRepository.save(user);
+        userService.saveUser(user);
 
         AuthenticationRequestDto badRequest = AuthenticationRequestDto.builder()
                 .email("fail@example.com")
