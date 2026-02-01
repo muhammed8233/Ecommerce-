@@ -1,12 +1,11 @@
 package com.example.ecommerce.config;
 
-import com.example.ecommerce.service.JwtServiceImpl;
+import com.example.ecommerce.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,12 +20,12 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtServiceImpl jwtService;
+    private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final HandlerExceptionResolver resolver;
 
     public JwtAuthenticationFilter(
-            JwtServiceImpl jwtService,
+            JwtService jwtService,
             UserDetailsService userDetailsService,
             @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
         this.jwtService = jwtService;

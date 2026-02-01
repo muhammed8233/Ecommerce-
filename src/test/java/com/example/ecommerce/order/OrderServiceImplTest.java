@@ -1,29 +1,33 @@
 package com.example.ecommerce.order;
 
+import com.example.ecommerce.Enum.Status;
+import com.example.ecommerce.dtos.OrderItemRequest;
+import com.example.ecommerce.dtos.OrderRequest;
+import com.example.ecommerce.dtos.OrderResponse;
 import com.example.ecommerce.exception.InsufficientStockException;
 import com.example.ecommerce.exception.PaymentNotFoundException;
-import com.example.ecommerce.payment.Payment;
-import com.example.ecommerce.payment.PaymentGatewayService;
-import com.example.ecommerce.payment.PaymentRepository;
-import com.example.ecommerce.payment.PaymentStatus;
-import com.example.ecommerce.product.Product;
-import com.example.ecommerce.product.ProductRepository;
-import com.example.ecommerce.user.Role;
-import com.example.ecommerce.user.User;
-import com.example.ecommerce.user.UserRepository;
-import org.junit.jupiter.api.AfterEach;
+import com.example.ecommerce.model.Order;
+import com.example.ecommerce.model.Payment;
+import com.example.ecommerce.service.PaymentGatewayService;
+import com.example.ecommerce.repository.OrderRepository;
+import com.example.ecommerce.repository.PaymentRepository;
+import com.example.ecommerce.Enum.PaymentStatus;
+import com.example.ecommerce.model.Product;
+import com.example.ecommerce.repository.ProductRepository;
+import com.example.ecommerce.Enum.Role;
+import com.example.ecommerce.model.User;
+import com.example.ecommerce.repository.UserRepository;
+import com.example.ecommerce.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -79,12 +83,6 @@ class OrderServiceImplTest {
         Product savedProduct = productRepository.save(product);
         savedProductId = savedProduct.getId();
     }
-
-    @AfterEach
-    void tearDown() {
-        SecurityContextHolder.clearContext();
-    }
-
 
     @Test
     void testPlaceOrderAndInitiatePayment_Success() {
@@ -223,11 +221,7 @@ class OrderServiceImplTest {
                     .userId("user_2")
                     .build();
             orderRepository.save(order2);
-
-
-
         Page<OrderResponse> result = orderService.getOrders(null, PageRequest.of(0, 2));
-
 
         assertEquals(1, result.getContent().size());
         assertEquals(1, result.getTotalElements());

@@ -1,9 +1,11 @@
 package com.example.ecommerce.inventory;
 
-import com.example.ecommerce.product.Product;
-import com.example.ecommerce.product.ProductRequest;
-import com.example.ecommerce.product.ProductResponse;
-import com.example.ecommerce.product.ProductService;
+import com.example.ecommerce.model.Product;
+import com.example.ecommerce.dtos.ProductRequest;
+import com.example.ecommerce.dtos.ProductResponse;
+import com.example.ecommerce.repository.InventoryMovementRepository;
+import com.example.ecommerce.service.InventoryMovementService;
+import com.example.ecommerce.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

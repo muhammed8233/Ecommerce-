@@ -1,6 +1,10 @@
 package com.example.ecommerce.product;
 
-import com.example.ecommerce.order.OrderResponse;
+import com.example.ecommerce.dtos.ProductRequest;
+import com.example.ecommerce.dtos.ProductResponse;
+import com.example.ecommerce.model.Product;
+import com.example.ecommerce.repository.ProductRepository;
+import com.example.ecommerce.service.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +80,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void testGetProduct(){
+    void testGetProduct() {
         Product product1 = Product.builder()
                 .productName("bread")
                 .category("medium")
@@ -102,6 +106,4 @@ class ProductServiceImplTest {
         assertNotNull(result);
         assertTrue(result.getTotalElements() >= 2);
     }
-
-
 }

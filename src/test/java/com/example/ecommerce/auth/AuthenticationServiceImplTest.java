@@ -1,8 +1,9 @@
 package com.example.ecommerce.auth;
 
-import com.example.ecommerce.user.Role;
-import com.example.ecommerce.user.User;
-import com.example.ecommerce.user.UserRepository;
+import com.example.ecommerce.Enum.Role;
+import com.example.ecommerce.model.User;
+import com.example.ecommerce.repository.UserRepository;
+import com.example.ecommerce.service.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,12 +42,11 @@ class AuthenticationServiceImplTest {
 
         AuthenticationResponse response = authService.register(request);
 
-        assertNotNull(response.getToken(), "Access token should be generated");
+        assertNotNull(response.getToken());
 
         User savedUser = userRepository.findByEmail("john@example.com").orElseThrow();
         assertEquals("John", savedUser.getName());
-        assertTrue(passwordEncoder.matches("password123", savedUser.getPassword()),
-                "Password should be stored in an encoded format");
+        assertTrue(passwordEncoder.matches("password123", savedUser.getPassword()));
     }
 
     @Test
