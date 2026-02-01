@@ -1,7 +1,7 @@
 package com.example.ecommerce.product;
 
-import com.example.ecommerce.dtos.ProductRequest;
-import com.example.ecommerce.dtos.ProductResponse;
+import com.example.ecommerce.dtos.ProductRequestDto;
+import com.example.ecommerce.dtos.ProductResponseDto;
 import com.example.ecommerce.model.Product;
 import com.example.ecommerce.repository.ProductRepository;
 import com.example.ecommerce.service.ProductService;
@@ -34,7 +34,7 @@ class ProductServiceImplTest {
 
     @Test
     void createProduct() {
-        ProductRequest productRequest = ProductRequest.builder()
+        ProductRequestDto productRequestDto = ProductRequestDto.builder()
                 .productName("bread")
                 .category("medium")
                 .description("family size")
@@ -43,13 +43,13 @@ class ProductServiceImplTest {
                 .stockQuantity(1)
                 .build();
         assertEquals(0, productRepository.findAll().size());
-        productService.createProduct(productRequest);
+        productService.createProduct(productRequestDto);
         assertEquals(1, productRepository.findAll().size());
     }
 
     @Test
     public void testUpdateProduct(){
-        ProductRequest productRequest = ProductRequest.builder()
+        ProductRequestDto productRequestDto = ProductRequestDto.builder()
                 .productName("bread")
                 .category("medium")
                 .description("family size")
@@ -58,10 +58,10 @@ class ProductServiceImplTest {
                 .stockQuantity(1)
                 .build();
         assertEquals(0, productRepository.findAll().size());
-        ProductResponse saveProduct = productService.createProduct(productRequest);
+        ProductResponseDto saveProduct = productService.createProduct(productRequestDto);
         assertEquals(1, productRepository.findAll().size());
 
-        ProductRequest request = ProductRequest.builder()
+        ProductRequestDto request = ProductRequestDto.builder()
                 .productName("yam")
                 .category("small")
                 .description("small size")
@@ -70,7 +70,7 @@ class ProductServiceImplTest {
                 .stockQuantity(1)
                 .build();
         assertEquals(1, productRepository.findAll().size());
-       ProductResponse result = productService.updateProduct(saveProduct.getProductId(),request);
+       ProductResponseDto result = productService.updateProduct(saveProduct.getProductId(),request);
         assertEquals(1, productRepository.findAll().size());
 
         assertEquals("yam", result.getProductName());
@@ -101,7 +101,7 @@ class ProductServiceImplTest {
                 .build();
         productRepository.save(product2);
 
-        Page<ProductResponse> result = productService.getProducts("", PageRequest.of(0, 10));
+        Page<ProductResponseDto> result = productService.getProducts("", PageRequest.of(0, 10));
 
         assertNotNull(result);
         assertTrue(result.getTotalElements() >= 2);

@@ -1,8 +1,8 @@
 package com.example.ecommerce.service;
 
 import com.example.ecommerce.model.Order;
-import com.example.ecommerce.dtos.OrderRequest;
-import com.example.ecommerce.dtos.OrderResponse;
+import com.example.ecommerce.dtos.OrderRequestDto;
+import com.example.ecommerce.dtos.OrderResponseDto;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,11 +12,11 @@ public interface OrderService {
 
     String initiatePayment(String orderId);
 
-    OrderResponse placeOrder(OrderRequest request);
+    OrderResponseDto placeOrder(OrderRequestDto request);
 
-    void finalizeTransaction(String reference);
+ void markAsPaid(String reference);
 
-    @Nullable Page<OrderResponse> getOrders(String search, Pageable pageable);
+    @Nullable Page<OrderResponseDto> getOrders(String search, Pageable pageable);
 
     Order findById(String orderId);
 }

@@ -3,8 +3,6 @@ package com.example.ecommerce.service;
 import com.example.ecommerce.Enum.PaymentStatus;
 import com.example.ecommerce.exception.PaymentNotFoundException;
 import com.example.ecommerce.model.Payment;
-import com.example.ecommerce.model.Order;
-import com.example.ecommerce.Enum.Status;
 import com.example.ecommerce.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,18 +38,17 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     @Override
-    public void finalizeTransaction(String reference) {
+    public void processPaymentStatus(String reference) {
         PaymentStatus status = checkPaymentStatus(reference);
+        Payment payment = findByReference(reference);
 
         if (status == PaymentStatus.SUCCESS) {
-            Payment payment = findByReference(reference);
-
-            Order order = orderService.findById(payment.getOrderId());
-            order.setStatus(Status.PAID);
             payment.setStatus(PaymentStatus.SUCCESS);
             payment.setTime(LocalDateTime.now());
+            paymentRepository.save(payment);
 
-            orderRepository.save(order);
+
+            orderService.markAsPaid(payment.getOrderId());
         }
     }
 }

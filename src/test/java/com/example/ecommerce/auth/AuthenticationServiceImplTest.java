@@ -1,6 +1,9 @@
 package com.example.ecommerce.auth;
 
 import com.example.ecommerce.Enum.Role;
+import com.example.ecommerce.dtos.AuthenticationRequestDto;
+import com.example.ecommerce.dtos.AuthenticationResponseDto;
+import com.example.ecommerce.dtos.RegisterRequestDto;
 import com.example.ecommerce.model.User;
 import com.example.ecommerce.repository.UserRepository;
 import com.example.ecommerce.service.AuthenticationService;
@@ -34,13 +37,13 @@ class AuthenticationServiceImplTest {
     @Test
     void register_ShouldSaveUserAndEncodePassword() {
 
-        RegisterRequest request = RegisterRequest.builder()
+        RegisterRequestDto request = RegisterRequestDto.builder()
                 .name("John")
                 .email("john@example.com")
                 .password("password123")
                 .build();
 
-        AuthenticationResponse response = authService.register(request);
+        AuthenticationResponseDto response = authService.register(request);
 
         assertNotNull(response.getToken());
 
@@ -59,12 +62,12 @@ class AuthenticationServiceImplTest {
                 .build();
         userRepository.save(user);
 
-        AuthenticationRequest authRequest = AuthenticationRequest.builder()
+        AuthenticationRequestDto authRequest = AuthenticationRequestDto.builder()
                 .email("jane@example.com")
                 .password("secret")
                 .build();
 
-        AuthenticationResponse response = authService.authenticate(authRequest);
+        AuthenticationResponseDto response = authService.authenticate(authRequest);
 
         assertNotNull(response.getToken());
 
@@ -79,7 +82,7 @@ class AuthenticationServiceImplTest {
                 .build();
         userRepository.save(user);
 
-        AuthenticationRequest badRequest = AuthenticationRequest.builder()
+        AuthenticationRequestDto badRequest = AuthenticationRequestDto.builder()
                 .email("fail@example.com")
                 .password("wrong-password")
                 .build();

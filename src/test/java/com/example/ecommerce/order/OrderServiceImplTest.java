@@ -1,9 +1,9 @@
 package com.example.ecommerce.order;
 
 import com.example.ecommerce.Enum.Status;
-import com.example.ecommerce.dtos.OrderItemRequest;
-import com.example.ecommerce.dtos.OrderRequest;
-import com.example.ecommerce.dtos.OrderResponse;
+import com.example.ecommerce.dtos.OrderItemRequestDto;
+import com.example.ecommerce.dtos.OrderRequestDto;
+import com.example.ecommerce.dtos.OrderResponseDto;
 import com.example.ecommerce.exception.InsufficientStockException;
 import com.example.ecommerce.exception.PaymentNotFoundException;
 import com.example.ecommerce.model.Order;
@@ -86,12 +86,12 @@ class OrderServiceImplTest {
 
     @Test
     void testPlaceOrderAndInitiatePayment_Success() {
-        OrderItemRequest itemRequest = new OrderItemRequest();
+        OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setProductId(savedProductId);
         itemRequest.setQuantity(2);
 
 
-        OrderRequest request = new OrderRequest();
+        OrderRequestDto request = new OrderRequestDto();
         request.setItemList(List.of(itemRequest));
 
         String reference = orderService.placeOrderAndInitiatePayment("temp-id", request);
@@ -104,15 +104,15 @@ class OrderServiceImplTest {
 
     @Test
     void placeOrder() {
-        OrderItemRequest itemRequest = new OrderItemRequest();
+        OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setProductId(savedProductId);
         itemRequest.setQuantity(5);
 
-        OrderRequest request = new OrderRequest();
+        OrderRequestDto request = new OrderRequestDto();
         request.setItemList(List.of(itemRequest));
 
 
-        OrderResponse response = orderService.placeOrder(request);
+        OrderResponseDto response = orderService.placeOrder(request);
 
         assertNotNull(response.getOrderId());
         assertEquals("Bread", response.getItems().getFirst().getProductName());
@@ -127,11 +127,11 @@ class OrderServiceImplTest {
     @Test
     void shouldThrowExceptionWhenStockIsInsufficient() {
 
-        OrderItemRequest itemRequest = new OrderItemRequest();
+        OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setProductId(savedProductId);
         itemRequest.setQuantity(25);
 
-        OrderRequest request = new OrderRequest();
+        OrderRequestDto request = new OrderRequestDto();
         request.setItemList(List.of(itemRequest));
 
         assertThrows(InsufficientStockException.class, () -> {
@@ -140,7 +140,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void testFinalizeTransactionToReturnSuccess() {
+    void testMarkAsPaidToReturnSuccess() {
         Order order = new Order();
         order.setStatus(Status.PENDING);
         Order savedOrder = orderRepository.save(order);
@@ -151,7 +151,7 @@ class OrderServiceImplTest {
         payment.setStatus(PaymentStatus.PENDING);
         paymentRepository.save(payment);
 
-        orderService.finalizeTransaction("REF-2026");
+        orderService.markAsPaid("REF-2026");
 
         Order updatedOrder = orderRepository.findById(savedOrder.getId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -164,9 +164,9 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void testFinalizeTransaction_ThrowsPaymentNotFound() {
+    void testMarkAsPaid_ThrowsPaymentNotFound() {
         assertThrows(PaymentNotFoundException.class, () -> {
-            orderService.finalizeTransaction("NON-EXISTENT-REF");
+            orderService.markAsPaid("NON-EXISTENT-REF");
         });
     }
 
@@ -186,7 +186,7 @@ class OrderServiceImplTest {
                 .build();
         orderRepository.save(order2);
         System.out.println(orderRepository.findAll());
-        Page<OrderResponse> result = orderService.getOrders("AAA", PageRequest.of(0, 10));
+        Page<OrderResponseDto> result = orderService.getOrders("AAA", PageRequest.of(0, 10));
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
@@ -208,7 +208,7 @@ class OrderServiceImplTest {
         orderRepository.save(order2);
 
         assertEquals(2, orderRepository.findAll().size());
-        Page<OrderResponse> result = orderService.getOrders("", PageRequest.of(0, 10));
+        Page<OrderResponseDto> result = orderService.getOrders("", PageRequest.of(0, 10));
 
         assertNotNull(result);
         assertTrue(result.getTotalElements() >= 2);
@@ -221,7 +221,7 @@ class OrderServiceImplTest {
                     .userId("user_2")
                     .build();
             orderRepository.save(order2);
-        Page<OrderResponse> result = orderService.getOrders(null, PageRequest.of(0, 2));
+        Page<OrderResponseDto> result = orderService.getOrders(null, PageRequest.of(0, 2));
 
         assertEquals(1, result.getContent().size());
         assertEquals(1, result.getTotalElements());

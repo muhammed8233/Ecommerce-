@@ -1,11 +1,11 @@
 package com.example.ecommerce.service;
 
-import com.example.ecommerce.auth.AuthenticationRequest;
-import com.example.ecommerce.auth.AuthenticationResponse;
-import com.example.ecommerce.auth.RegisterRequest;
+import com.example.ecommerce.dtos.AuthenticationRequestDto;
+import com.example.ecommerce.dtos.AuthenticationResponseDto;
+import com.example.ecommerce.dtos.RegisterRequestDto;
 
 public interface AuthenticationService {
-    AuthenticationResponse authenticate(AuthenticationRequest request);
+    AuthenticationResponseDto authenticate(AuthenticationRequestDto request);
 
-    AuthenticationResponse register(RegisterRequest request);
+    AuthenticationResponseDto register(RegisterRequestDto request);
 }

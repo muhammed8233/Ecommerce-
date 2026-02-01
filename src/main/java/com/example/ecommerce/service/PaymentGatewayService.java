@@ -12,6 +12,6 @@ public interface PaymentGatewayService {
 
     Payment findByReference(String reference);
 
-    void finalizeTransaction(String reference);
+    void processPaymentStatus(String reference);
 }
 

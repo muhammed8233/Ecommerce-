@@ -1,7 +1,7 @@
 package com.example.ecommerce.controller;
 
-import com.example.ecommerce.dtos.OrderRequest;
-import com.example.ecommerce.dtos.OrderResponse;
+import com.example.ecommerce.dtos.OrderRequestDto;
+import com.example.ecommerce.dtos.OrderResponseDto;
 import com.example.ecommerce.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class OrderController {
 
    @PostMapping("/place")
    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-   public ResponseEntity<OrderResponse> placeOrder(@RequestBody OrderRequest request){
+   public ResponseEntity<OrderResponseDto> placeOrder(@RequestBody OrderRequestDto request){
        return new ResponseEntity<>(orderService.placeOrder(request), HttpStatus.CREATED);
    }
 
@@ -37,12 +37,12 @@ public class OrderController {
 
    @PostMapping("/verify-payment")
    public ResponseEntity<String> verifyPayment(@RequestParam String reference){
-       orderService.finalizeTransaction(reference);
+       orderService.markAsPaid(reference);
        return ResponseEntity.ok("verified successfully");
    }
 
    @GetMapping
-   public ResponseEntity<Page<OrderResponse>> getOrders(@RequestParam String search,   @PageableDefault(size = 10,sort = "orderId",
+   public ResponseEntity<Page<OrderResponseDto>> getOrders(@RequestParam String search, @PageableDefault(size = 10,sort = "orderId",
            direction = Sort.Direction.DESC)Pageable pageable){
 
        return ResponseEntity.ok(orderService.getOrders(search, pageable));

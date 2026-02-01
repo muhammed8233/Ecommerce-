@@ -2,8 +2,8 @@ package com.example.ecommerce.service;
 
 import com.example.ecommerce.exception.ProductNotFoundException;
 import com.example.ecommerce.model.Product;
-import com.example.ecommerce.dtos.ProductRequest;
-import com.example.ecommerce.dtos.ProductResponse;
+import com.example.ecommerce.dtos.ProductRequestDto;
+import com.example.ecommerce.dtos.ProductResponseDto;
 import com.example.ecommerce.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,7 +24,7 @@ public class ProductServiceImpl implements ProductService {
     private MongoTemplate mongoTemplate;
 
     @Override
-    public ProductResponse createProduct(ProductRequest request) {
+    public ProductResponseDto createProduct(ProductRequestDto request) {
         Product product = Product.builder()
                 .productName(request.getProductName())
                 .sku(request.getSku())
@@ -40,7 +40,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse updateProduct(String id, ProductRequest request) {
+    public ProductResponseDto updateProduct(String id, ProductRequestDto request) {
         Product product = productRepository.findById(id).orElseThrow();
         product.setProductName(request.getProductName());
         product.setCategory(request.getCategory());
@@ -62,7 +62,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<ProductResponse> getProducts(String search, Pageable pageable) {
+    public Page<ProductResponseDto> getProducts(String search, Pageable pageable) {
         Query query = new Query().with(pageable);
 
         if (search != null && !search.isBlank()) {
@@ -86,8 +86,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
 
-    private ProductResponse mapToProductResponse(Product product) {
-        return ProductResponse.builder()
+    private ProductResponseDto mapToProductResponse(Product product) {
+        return ProductResponseDto.builder()
                 .productId(product.getId())
                 .productName(product.getProductName())
                 .description(product.getDescription())

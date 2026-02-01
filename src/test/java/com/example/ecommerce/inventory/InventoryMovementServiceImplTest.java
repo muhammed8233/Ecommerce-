@@ -1,8 +1,8 @@
 package com.example.ecommerce.inventory;
 
 import com.example.ecommerce.model.Product;
-import com.example.ecommerce.dtos.ProductRequest;
-import com.example.ecommerce.dtos.ProductResponse;
+import com.example.ecommerce.dtos.ProductRequestDto;
+import com.example.ecommerce.dtos.ProductResponseDto;
 import com.example.ecommerce.repository.InventoryMovementRepository;
 import com.example.ecommerce.service.InventoryMovementService;
 import com.example.ecommerce.service.ProductService;
@@ -41,7 +41,7 @@ class InventoryMovementServiceImplTest {
 
     @Test
     void restockProduct() {
-        ProductRequest productRequest = ProductRequest.builder()
+        ProductRequestDto productRequestDto = ProductRequestDto.builder()
                 .productName("rice")
                 .category("white")
                 .description("mudu")
@@ -49,10 +49,10 @@ class InventoryMovementServiceImplTest {
                 .sku("BM21")
                 .stockQuantity(10)
                 .build();
-        ProductResponse saved = productService.createProduct(productRequest);
+        ProductResponseDto saved = productService.createProduct(productRequestDto);
 
         Pageable pageable = PageRequest.of(0,10, Sort.by("price").ascending());
-        Page<ProductResponse> productPage = productService.getProducts("rice",pageable);
+        Page<ProductResponseDto> productPage = productService.getProducts("rice",pageable);
 
         assertEquals(0,inventoryMovementRepository.findAll().size());
         inventoryMovementService.restockProduct(saved.getProductId(), 30);

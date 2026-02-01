@@ -1,4 +1,4 @@
-package com.example.ecommerce.auth;
+package com.example.ecommerce.dtos;
 
 
 import jakarta.validation.constraints.Email;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterRequest {
+public class RegisterRequestDto {
     @NotNull(message = "name can not be empty")
     private String name;
 

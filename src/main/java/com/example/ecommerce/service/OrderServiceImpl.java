@@ -1,18 +1,17 @@
 package com.example.ecommerce.service;
 
+import com.example.ecommerce.Enum.PaymentStatus;
 import com.example.ecommerce.Enum.Status;
-import com.example.ecommerce.dtos.OrderItemRequest;
-import com.example.ecommerce.dtos.OrderRequest;
-import com.example.ecommerce.dtos.OrderResponse;
+import com.example.ecommerce.dtos.OrderItemRequestDto;
+import com.example.ecommerce.dtos.OrderItemResponseDto;
+import com.example.ecommerce.dtos.OrderRequestDto;
+import com.example.ecommerce.dtos.OrderResponseDto;
 import com.example.ecommerce.exception.InsufficientStockException;
 import com.example.ecommerce.exception.OrderNotFoundException;
 import com.example.ecommerce.exception.ProductNotFoundException;
-import com.example.ecommerce.model.Order;
-import com.example.ecommerce.model.OrderItem;
-import com.example.ecommerce.model.Product;
+import com.example.ecommerce.model.*;
 import com.example.ecommerce.repository.OrderRepository;
 import com.example.ecommerce.repository.ProductRepository;
-import com.example.ecommerce.model.User;
 import com.example.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
@@ -73,7 +72,7 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
-    private Order savePendingOrder(OrderRequest request, User user, BigDecimal totalAmount) {
+    private Order savePendingOrder(OrderRequestDto request, User user, BigDecimal totalAmount) {
 
         Order order = Order.builder()
                 .userId(user.getId())
@@ -84,16 +83,16 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         request.getItemList().forEach
-                (orderItemRequest -> {
-                    Product product = productRepository.findById(orderItemRequest.getProductId())
-                            .orElseThrow(() -> new ProductNotFoundException("Product not found: " + orderItemRequest.getProductId()));
+                (orderItemRequestDto -> {
+                    Product product = productRepository.findById(orderItemRequestDto.getProductId())
+                            .orElseThrow(() -> new ProductNotFoundException("Product not found: " + orderItemRequestDto.getProductId()));
 
-                    inventoryMovementService.deductStock(product.getId(), orderItemRequest.getQuantity());
+                    inventoryMovementService.deductStock(product.getId(), orderItemRequestDto.getQuantity());
 
                     OrderItem orderItem = OrderItem.builder()
                             .productId(product.getId())
                             .name(product.getProductName())
-                            .quantity(orderItemRequest.getQuantity())
+                            .quantity(orderItemRequestDto.getQuantity())
                             .unitPrice(product.getPrice())
                             .build();
 
@@ -105,7 +104,7 @@ public class OrderServiceImpl implements OrderService {
 
 
     @Override
-    public OrderResponse placeOrder(OrderRequest request) {
+    public OrderResponseDto placeOrder(OrderRequestDto request) {
         String email = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName();
 
         User user = userRepository.findByEmail(email)
@@ -121,7 +120,14 @@ public class OrderServiceImpl implements OrderService {
 
     }
 
-    private BigDecimal calculateTotal(OrderRequest request) {
+    @Override
+    public void markAsPaid(String orderId) {
+        Order order = findById(orderId);
+        order.setStatus(Status.PAID);
+        orderRepository.save(order);
+    }
+
+    private BigDecimal calculateTotal(OrderRequestDto request) {
         return request.getItemList().stream()
                 .map(itemRequest -> {
                     Product product = productRepository.findById(itemRequest.getProductId())
@@ -134,15 +140,15 @@ public class OrderServiceImpl implements OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
     }
-    private void validateStockAvailability(OrderRequest request) {
+    private void validateStockAvailability(OrderRequestDto request) {
         List<String> productIds = request.getItemList().stream()
-                .map(OrderItemRequest::getProductId)
+                .map(OrderItemRequestDto::getProductId)
                 .toList();
 
         Map<String, Product> productMap = productRepository.findAllById(productIds).stream()
                 .collect(Collectors.toMap(Product::getId, product -> product));
 
-        for (OrderItemRequest item : request.getItemList()) {
+        for (OrderItemRequestDto item : request.getItemList()) {
             Product product = productMap.get(item.getProductId());
 
             if (product == null) {
@@ -159,7 +165,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public @Nullable Page<OrderResponse> getOrders(String search, Pageable pageable) {
+    public @Nullable Page<OrderResponseDto> getOrders(String search, Pageable pageable) {
         Query query = new Query().with(pageable);
 
         if (search != null && !search.isBlank()) {
@@ -186,18 +192,18 @@ public class OrderServiceImpl implements OrderService {
                 .map(this::mapToOrderResponse);
     }
 
-    private OrderResponse mapToOrderResponse(Order order) {
-        List<OrderItemResponse> itemResponses = (order.getOrderedItems() == null)
+    private OrderResponseDto mapToOrderResponse(Order order) {
+        List<OrderItemResponseDto> itemResponses = (order.getOrderedItems() == null)
                 ? Collections.emptyList()
                 : order.getOrderedItems().stream()
-                .map(item -> OrderItemResponse.builder()
+                .map(item -> OrderItemResponseDto.builder()
                         .productName(item.getName())
                         .quantity(item.getQuantity())
                         .unitPrice(item.getUnitPrice())
                         .build())
                 .toList();
 
-        return OrderResponse.builder()
+        return OrderResponseDto.builder()
                 .orderId(order.getId())
                 .items(itemResponses)
                 .totalAmount(order.getTotalAmount())

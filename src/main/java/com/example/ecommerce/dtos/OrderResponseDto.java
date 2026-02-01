@@ -14,9 +14,9 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderResponse {
+public class OrderResponseDto {
     private String orderId;
-    private List<OrderItemResponse> items;
+    private List<OrderItemResponseDto> items;
     private BigDecimal totalAmount;
     private Status status;
     private LocalDateTime createdAt;

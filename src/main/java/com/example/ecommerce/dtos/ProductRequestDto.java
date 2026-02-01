@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductRequest {
+public class ProductRequestDto {
 
     @NotBlank(message = "product name can not be empty")
     @Size(min = 2, message = "product name size must be > 2")

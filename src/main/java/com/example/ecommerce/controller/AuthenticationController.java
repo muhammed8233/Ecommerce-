@@ -1,9 +1,9 @@
 package com.example.ecommerce.controller;
 
-import com.example.ecommerce.auth.AuthenticationRequest;
-import com.example.ecommerce.auth.AuthenticationResponse;
+import com.example.ecommerce.dtos.AuthenticationRequestDto;
+import com.example.ecommerce.dtos.AuthenticationResponseDto;
 import com.example.ecommerce.service.AuthenticationService;
-import com.example.ecommerce.auth.RegisterRequest;
+import com.example.ecommerce.dtos.RegisterRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,14 +20,14 @@ public class AuthenticationController {
     private final AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@Valid
-            @RequestBody RegisterRequest request){
+    public ResponseEntity<AuthenticationResponseDto> register(@Valid
+            @RequestBody RegisterRequestDto request){
         return ResponseEntity.ok(authenticationService.register(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthenticationResponse> authenticate(
-            @RequestBody AuthenticationRequest request){
+    public ResponseEntity<AuthenticationResponseDto> authenticate(
+            @RequestBody AuthenticationRequestDto request){
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }
 }

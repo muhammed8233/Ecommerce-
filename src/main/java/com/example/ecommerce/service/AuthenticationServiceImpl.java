@@ -1,8 +1,8 @@
 package com.example.ecommerce.service;
 
-import com.example.ecommerce.auth.AuthenticationRequest;
-import com.example.ecommerce.auth.AuthenticationResponse;
-import com.example.ecommerce.auth.RegisterRequest;
+import com.example.ecommerce.dtos.AuthenticationRequestDto;
+import com.example.ecommerce.dtos.AuthenticationResponseDto;
+import com.example.ecommerce.dtos.RegisterRequestDto;
 import com.example.ecommerce.exception.UserAlreadyExistException;
 import com.example.ecommerce.Enum.Role;
 import com.example.ecommerce.model.User;
@@ -24,7 +24,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     @Override
-    public AuthenticationResponse register(RegisterRequest request) {
+    public AuthenticationResponseDto register(RegisterRequestDto request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserAlreadyExistException("Email already exists");
         }
@@ -38,7 +38,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .build();
         userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse
+        return AuthenticationResponseDto
                 .builder()
                 .token(jwtToken)
                 .build();
@@ -46,7 +46,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
 
     @Override
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
+    public AuthenticationResponseDto authenticate(AuthenticationRequestDto request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
@@ -54,7 +54,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         );
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
         String jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse
+        return AuthenticationResponseDto
                 .builder()
                 .token(jwtToken)
                 .build();

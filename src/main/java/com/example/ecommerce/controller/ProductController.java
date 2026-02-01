@@ -2,8 +2,8 @@ package com.example.ecommerce.controller;
 
 
 import com.example.ecommerce.service.InventoryMovementService;
-import com.example.ecommerce.dtos.ProductRequest;
-import com.example.ecommerce.dtos.ProductResponse;
+import com.example.ecommerce.dtos.ProductRequestDto;
+import com.example.ecommerce.dtos.ProductResponseDto;
 import com.example.ecommerce.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,24 +26,24 @@ public class ProductController {
     private InventoryMovementService inventoryMovementService;
 
     @GetMapping
-    public ResponseEntity<Page<ProductResponse>> listProducts(@RequestParam(required = false) String search,
-                                                              @PageableDefault(size = 10,sort = "productName",
+    public ResponseEntity<Page<ProductResponseDto>> listProducts(@RequestParam(required = false) String search,
+                                                                 @PageableDefault(size = 10,sort = "productName",
                                                                       direction = Sort.Direction.DESC) Pageable pageable){
         return ResponseEntity.ok(productService.getProducts(search, pageable));
     }
     @PostMapping("/add")
     @PreAuthorize("hasRole('ADMIN')")
-    public  ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request){
+    public  ResponseEntity<ProductResponseDto> createProduct(@Valid @RequestBody ProductRequestDto request){
 
-        ProductResponse create = productService.createProduct(request);
+        ProductResponseDto create = productService.createProduct(request);
         return new ResponseEntity<>(create, HttpStatus.CREATED);
     }
 
     @PutMapping("/{productId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ProductResponse> updateProduct(@PathVariable("productId") String productId,
-                                                         @Valid @RequestBody ProductRequest request){
-        ProductResponse update = productService.updateProduct(productId, request);
+    public ResponseEntity<ProductResponseDto> updateProduct(@PathVariable("productId") String productId,
+                                                            @Valid @RequestBody ProductRequestDto request){
+        ProductResponseDto update = productService.updateProduct(productId, request);
         return ResponseEntity.ok(update);
     }
 
