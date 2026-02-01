@@ -11,8 +11,6 @@ import com.example.ecommerce.exception.OrderNotFoundException;
 import com.example.ecommerce.exception.ProductNotFoundException;
 import com.example.ecommerce.model.*;
 import com.example.ecommerce.repository.OrderRepository;
-import com.example.ecommerce.repository.ProductRepository;
-import com.example.ecommerce.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
@@ -24,7 +22,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,9 +42,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private PaymentGatewayService paymentGatewayService;
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
     @Autowired
-    private ProductRepository productRepository;
+    private ProductService productService;
     @Autowired
     private InventoryMovementService inventoryMovementService;
     @Autowired
@@ -56,20 +53,14 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public String initiatePayment(String orderId){
 
-            String email = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName();
+        String email = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName();
 
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        userService.findByEmail(email);
 
-            Order order = findById(orderId);
+        Order order = findById(orderId);
 
-            String reference = paymentGatewayService.initiatePayment(
+        return paymentGatewayService.initiatePayment(
                     order.getTotalAmount(), "USD", order.getId());
-
-
-
-            return reference;
-
     }
 
     private Order savePendingOrder(OrderRequestDto request, User user, BigDecimal totalAmount) {
@@ -84,8 +75,7 @@ public class OrderServiceImpl implements OrderService {
 
         request.getItemList().forEach
                 (orderItemRequestDto -> {
-                    Product product = productRepository.findById(orderItemRequestDto.getProductId())
-                            .orElseThrow(() -> new ProductNotFoundException("Product not found: " + orderItemRequestDto.getProductId()));
+                    Product product = productService.findById(orderItemRequestDto.getProductId());
 
                     inventoryMovementService.deductStock(product.getId(), orderItemRequestDto.getQuantity());
 
@@ -107,8 +97,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponseDto placeOrder(OrderRequestDto request) {
         String email = Objects.requireNonNull(SecurityContextHolder.getContext().getAuthentication()).getName();
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userService.findByEmail(email);
 
         validateStockAvailability(request);
 
@@ -130,9 +119,7 @@ public class OrderServiceImpl implements OrderService {
     private BigDecimal calculateTotal(OrderRequestDto request) {
         return request.getItemList().stream()
                 .map(itemRequest -> {
-                    Product product = productRepository.findById(itemRequest.getProductId())
-                            .orElseThrow(() -> new ProductNotFoundException("Product not found: " + itemRequest.getProductId()));
-
+                    Product product = productService.findById(itemRequest.getProductId());
                     BigDecimal unitPrice = product.getPrice();
                     BigDecimal quantity = BigDecimal.valueOf(itemRequest.getQuantity());
                     return unitPrice.multiply(quantity);
@@ -140,12 +127,13 @@ public class OrderServiceImpl implements OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .setScale(2, RoundingMode.HALF_UP);
     }
+
     private void validateStockAvailability(OrderRequestDto request) {
         List<String> productIds = request.getItemList().stream()
                 .map(OrderItemRequestDto::getProductId)
                 .toList();
 
-        Map<String, Product> productMap = productRepository.findAllById(productIds).stream()
+        Map<String, Product> productMap = productService.findAllById(productIds).stream()
                 .collect(Collectors.toMap(Product::getId, product -> product));
 
         for (OrderItemRequestDto item : request.getItemList()) {
@@ -179,7 +167,6 @@ public class OrderServiceImpl implements OrderService {
             } else {
                 orCriteria.add(Criteria.where("_id").regex(regexPattern, "i"));
             }
-
             orCriteria.add(Criteria.where("userId").regex(regexPattern, "i"));
             query.addCriteria(new Criteria().orOperator(orCriteria.toArray(new Criteria[0])));
         }

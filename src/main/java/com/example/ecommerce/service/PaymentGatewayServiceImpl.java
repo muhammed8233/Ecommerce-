@@ -26,8 +26,18 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     @Override
-    public String initiatePayment(BigDecimal totalAmount, String usd, String string) {
-        return "FAKE REF" + System.currentTimeMillis();
+    public String initiatePayment(BigDecimal totalAmount, String usd, String orderId) {
+        String reference = "FAKE REF" + System.currentTimeMillis();
+
+        Payment payment = new Payment();
+        payment.setReference(reference);
+        payment.setOrderId(orderId);
+        payment.setAmount(totalAmount);
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setTime(LocalDateTime.now());
+
+        paymentRepository.save(payment);
+        return reference;
     }
 
     @Override
@@ -46,7 +56,6 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
             payment.setStatus(PaymentStatus.SUCCESS);
             payment.setTime(LocalDateTime.now());
             paymentRepository.save(payment);
-
 
             orderService.markAsPaid(payment.getOrderId());
         }

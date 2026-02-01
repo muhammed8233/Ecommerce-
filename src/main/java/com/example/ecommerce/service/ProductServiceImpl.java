@@ -97,4 +97,18 @@ public class ProductServiceImpl implements ProductService {
                 .stockQuantity(product.getStockQuantity())
                 .build();
     }
+
+    @Override
+    public Product findById(String productId){
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Product with id: " + productId + "not found"));
+    }
+
+    @Override
+    public List<Product> findAllById(List<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return null;
+        }
+        return productRepository.findAllById(productIds);
+    }
 }

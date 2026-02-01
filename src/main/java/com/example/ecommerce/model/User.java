@@ -18,6 +18,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -48,6 +49,10 @@ public class User implements UserDetails {
 
     @Version
     private int version;
+
+    public <E> User(@NotBlank(message = "email can not be empty") @Email(message = "Please provide a valid email address") String email, @Nullable String password, ArrayList<E> es) {
+
+    }
 
 
     public void setEmail(String email) {

@@ -13,5 +13,8 @@ public interface PaymentGatewayService {
     Payment findByReference(String reference);
 
     void processPaymentStatus(String reference);
+
+    void deleteAll();
 }
+
 

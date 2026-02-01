@@ -6,6 +6,9 @@ import com.example.ecommerce.dtos.ProductResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collection;
+import java.util.List;
+
 public interface ProductService {
     ProductResponseDto createProduct(ProductRequestDto request);
 
@@ -14,4 +17,9 @@ public interface ProductService {
     Product findProductById(String productId);
 
     Page<ProductResponseDto> getProducts(String search, Pageable pageable);
+
+    Product findById(String productId);
+
+    List<Product> findAllById(List<String> productIds);
 }
+

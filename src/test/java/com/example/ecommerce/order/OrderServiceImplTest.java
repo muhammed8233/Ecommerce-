@@ -8,6 +8,7 @@ import com.example.ecommerce.exception.InsufficientStockException;
 import com.example.ecommerce.exception.PaymentNotFoundException;
 import com.example.ecommerce.model.Order;
 import com.example.ecommerce.model.Payment;
+import com.example.ecommerce.service.JwtService;
 import com.example.ecommerce.service.PaymentGatewayService;
 import com.example.ecommerce.repository.OrderRepository;
 import com.example.ecommerce.repository.PaymentRepository;
@@ -18,6 +19,7 @@ import com.example.ecommerce.Enum.Role;
 import com.example.ecommerce.model.User;
 import com.example.ecommerce.repository.UserRepository;
 import com.example.ecommerce.service.OrderService;
+import com.example.ecommerce.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,9 +48,7 @@ class OrderServiceImplTest {
     @Autowired
     private OrderRepository orderRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private PaymentRepository paymentRepository;
+    private UserService userService;
     @Autowired
     private PaymentGatewayService paymentGatewayService;
 
@@ -57,9 +57,9 @@ class OrderServiceImplTest {
     @BeforeEach
     void setUp() {
         orderRepository.deleteAll();
-        userRepository.deleteAll();
+        userService.deleteAll();
         productRepository.deleteAll();
-        paymentRepository.deleteAll();
+        paymentGatewayService.deleteAll();
 
         User user = new User();
         user.setEmail("limanasmau@ghost.com");
@@ -85,21 +85,28 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void testPlaceOrderAndInitiatePayment_Success() {
+    void testInitiatePayment_Success() {
         OrderItemRequestDto itemRequest = new OrderItemRequestDto();
         itemRequest.setProductId(savedProductId);
         itemRequest.setQuantity(2);
 
-
         OrderRequestDto request = new OrderRequestDto();
         request.setItemList(List.of(itemRequest));
 
-        String reference = orderService.placeOrderAndInitiatePayment("temp-id", request);
+        OrderResponseDto savedOrder = orderService.placeOrder(request);
+
+        String reference = orderService.initiatePayment(savedOrder.getOrderId());
 
         assertNotNull(reference);
+        Payment payment = paymentGatewayService.findByReference(reference);
+
         assertTrue(reference.startsWith("FAKE REF"));
 
-        assertTrue(paymentRepository.findByReference(reference).isPresent());
+        assertEquals(PaymentStatus.PENDING, payment.getStatus());
+        assertNotNull(payment.getOrderId());
+
+        Order order = orderRepository.findById(payment.getOrderId()).get();
+        assertEquals(Status.PENDING, order.getStatus());
     }
 
     @Test
@@ -149,9 +156,9 @@ class OrderServiceImplTest {
         payment.setReference("REF-2026");
         payment.setOrderId(savedOrder.getId());
         payment.setStatus(PaymentStatus.PENDING);
-        paymentRepository.save(payment);
 
-        orderService.markAsPaid("REF-2026");
+
+        paymentGatewayService.processPaymentStatus("REF-2026");
 
         Order updatedOrder = orderRepository.findById(savedOrder.getId())
                 .orElseThrow(() -> new RuntimeException("Order not found"));
@@ -163,12 +170,6 @@ class OrderServiceImplTest {
         assertNotNull(updatedPayment.getTime());
     }
 
-    @Test
-    void testMarkAsPaid_ThrowsPaymentNotFound() {
-        assertThrows(PaymentNotFoundException.class, () -> {
-            orderService.markAsPaid("NON-EXISTENT-REF");
-        });
-    }
 
     @Test
     void getOrders_ShouldReturnFilteredResults_ById() {
