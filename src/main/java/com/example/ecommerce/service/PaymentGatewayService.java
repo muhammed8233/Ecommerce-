@@ -3,6 +3,7 @@ package com.example.ecommerce.service;
 import com.example.ecommerce.model.Payment;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface PaymentGatewayService {
 
@@ -13,6 +14,10 @@ public interface PaymentGatewayService {
     void processPaymentStatus(String reference);
 
     void deleteAll();
+
+    List<Payment> findAll();
+
+    void savepayment(Payment payment);
 }
 
 

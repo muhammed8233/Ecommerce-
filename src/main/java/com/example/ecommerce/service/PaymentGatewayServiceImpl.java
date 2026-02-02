@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
@@ -19,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -40,11 +42,21 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     @Override
     @Transactional
     public String initiatePayment(BigDecimal totalAmount, String email, String orderId) {
+        String currentUserEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        if (currentUserEmail == null || !currentUserEmail.contains("@")) {
+            throw new IllegalArgumentException("A valid user email is required for payment");
+        }
+
+        System.out.println("DEBUG: Attempting Paystack init with email: [" + currentUserEmail + "]");
+        System.out.println("DEBUG: Key Length: " + (paystackSecretKey != null ? paystackSecretKey.length() : "NULL"));
+        System.out.println("DEBUG: Key Starts With: " + (paystackSecretKey != null && paystackSecretKey.length() > 7 ? paystackSecretKey.substring(0, 7) : "INVALID"));
+
         try {
         Map<String, Object> payload = new HashMap<>();
-        payload.put("email", email);
+        payload.put("email", currentUserEmail);
         payload.put("amount", totalAmount.multiply(new BigDecimal(100)));
-        payload.put("callback_url", "http://your-frontend-link.com");
+        payload.put("callback_url", "https://nonenlightened-tonsorial-august.ngrok-free.dev");
         payload.put("metadata", Map.of("order_id", orderId));
 
         HttpHeaders headers = new HttpHeaders();
@@ -111,21 +123,30 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
                 orderService.markAsPaid(payment.getOrderId());
             }
-        } else if (response != null) {
-            String paystackStatus = response.getData().getStatus();
-
+        }
+        else if (response != null && "failed".equals(response.getData().getStatus())) {
             payment.setPaymentStatus(PaymentStatus.FAILED);
             paymentRepository.save(payment);
-
-
             orderService.updateStatus(payment.getOrderId(), Status.CANCELED);
-
-            log.warn("Payment {} failed with status: {}", reference, paystackStatus);
+            log.warn("Payment {} failed explicitly", reference);
+        }
+        else {
+            log.info("Payment {} is still in progress (Status: {})", reference, response.getData().getStatus());
         }
     }
 
     @Override
     public void deleteAll() {
         paymentRepository.deleteAll();
+    }
+
+    @Override
+    public List<Payment> findAll() {
+        return paymentRepository.findAll();
+    }
+
+    @Override
+    public void savepayment(Payment payment) {
+        paymentRepository.save(payment);
     }
 }

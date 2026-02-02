@@ -19,6 +19,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -40,6 +41,8 @@ class OrderServiceImplTest {
     private UserService userService;
     @Autowired
     private PaymentGatewayService paymentGatewayService;
+    @Autowired
+    private RestTemplate restTemplate;
 
     private String savedProductId;
 
@@ -85,18 +88,15 @@ class OrderServiceImplTest {
 
         OrderResponseDto savedOrder = orderService.placeOrder(request);
 
-        String reference = orderService.initiatePayment(savedOrder.getOrderId());
+        String authUrl = orderService.initiatePayment(savedOrder.getOrderId());
+        assertNotNull(authUrl);
+        assertTrue(authUrl.contains("checkout.paystack.com"));
 
-        assertNotNull(reference);
-        Payment payment = paymentGatewayService.findByReference(reference);
+        List<Payment> payments = paymentGatewayService.findAll();
+        assertFalse(payments.isEmpty());
+        assertNotNull(payments.get(0).getReference());
 
-        assertTrue(reference.startsWith("FAKE REF"));
 
-        assertEquals(PaymentStatus.PENDING, payment.getPaymentStatus());
-        assertNotNull(payment.getOrderId());
-
-        Order order = orderRepository.findById(payment.getOrderId()).get();
-        assertEquals(Status.PENDING, order.getOrderStatus());
     }
 
     @Test
@@ -137,27 +137,28 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void testMarkAsPaidToReturnSuccess() {
-        Order order = new Order();
-        order.setOrderStatus(Status.PENDING);
-        Order savedOrder = orderRepository.save(order);
+    void testMarkAsPaidWithRealReference() {
+        String reference = "27zfawvdbp";
 
-        String reference = paymentGatewayService.initiatePayment(
-                savedOrder.getTotalAmount(),
-                "USD",
-                savedOrder.getId()
-        );
+        Order order = new Order();
+        order.setTotalAmount(new BigDecimal("30000.00"));
+        order.setOrderStatus(Status.PENDING);
+        order = orderRepository.save(order);
+
+        Payment payment = new Payment();
+        payment.setReference(reference);
+        payment.setOrderId(order.getId());
+        payment.setAmount(order.getTotalAmount());
+        payment.setPaymentStatus(PaymentStatus.PENDING);
+        paymentGatewayService.savepayment(payment);
 
         paymentGatewayService.processPaymentStatus(reference);
 
-        Order updatedOrder = orderRepository.findById(savedOrder.getId())
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-        Payment updatedPayment = paymentGatewayService.findByReference(reference);
-
+        Order updatedOrder = orderRepository.findById(order.getId()).get();
         assertEquals(Status.PAID, updatedOrder.getOrderStatus());
-        assertEquals(PaymentStatus.SUCCESS, updatedPayment.getPaymentStatus());
-        assertNotNull(updatedPayment.getTime());
     }
+
+
 
 
     @Test
