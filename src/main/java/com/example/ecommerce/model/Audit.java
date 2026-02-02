@@ -1,5 +1,8 @@
 package com.example.ecommerce.model;
 
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -8,6 +11,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
 public abstract class Audit {
     @CreatedDate
     @Field("created_at")
