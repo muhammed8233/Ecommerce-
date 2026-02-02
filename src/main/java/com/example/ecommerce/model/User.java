@@ -50,10 +50,13 @@ public class User implements UserDetails {
     @Version
     private int version;
 
-    public <E> User(@NotBlank(message = "email can not be empty") @Email(message = "Please provide a valid email address") String email, @Nullable String password, ArrayList<E> es) {
+    public <E> User(@NotBlank(message = "email can not be empty")
+                    @Email(message = "Please provide a valid email address")
+                    String email,
+                    @Nullable String password,
+                    ArrayList<E> es) {
 
     }
-
 
     public void setEmail(String email) {
         if (email != null ) {

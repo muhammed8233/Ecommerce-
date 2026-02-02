@@ -28,7 +28,7 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<Page<ProductResponseDto>> listProducts(@RequestParam(required = false) String search,
                                                                  @PageableDefault(size = 10,sort = "productName",
-                                                                      direction = Sort.Direction.DESC) Pageable pageable){
+                                                                      direction = Sort.Direction.ASC) Pageable pageable){
         return ResponseEntity.ok(productService.getProducts(search, pageable));
     }
     @PostMapping("/add")

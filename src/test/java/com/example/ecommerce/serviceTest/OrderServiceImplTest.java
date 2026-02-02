@@ -92,11 +92,11 @@ class OrderServiceImplTest {
 
         assertTrue(reference.startsWith("FAKE REF"));
 
-        assertEquals(PaymentStatus.PENDING, payment.getStatus());
+        assertEquals(PaymentStatus.PENDING, payment.getPaymentStatus());
         assertNotNull(payment.getOrderId());
 
         Order order = orderRepository.findById(payment.getOrderId()).get();
-        assertEquals(Status.PENDING, order.getStatus());
+        assertEquals(Status.PENDING, order.getOrderStatus());
     }
 
     @Test
@@ -139,7 +139,7 @@ class OrderServiceImplTest {
     @Test
     void testMarkAsPaidToReturnSuccess() {
         Order order = new Order();
-        order.setStatus(Status.PENDING);
+        order.setOrderStatus(Status.PENDING);
         Order savedOrder = orderRepository.save(order);
 
         String reference = paymentGatewayService.initiatePayment(
@@ -154,8 +154,8 @@ class OrderServiceImplTest {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         Payment updatedPayment = paymentGatewayService.findByReference(reference);
 
-        assertEquals(Status.PAID, updatedOrder.getStatus());
-        assertEquals(PaymentStatus.SUCCESS, updatedPayment.getStatus());
+        assertEquals(Status.PAID, updatedOrder.getOrderStatus());
+        assertEquals(PaymentStatus.SUCCESS, updatedPayment.getPaymentStatus());
         assertNotNull(updatedPayment.getTime());
     }
 
@@ -164,14 +164,14 @@ class OrderServiceImplTest {
     void getOrders_ShouldReturnFilteredResults_ById() {
         Order order1 = Order.builder()
                 .id("ORD-2026-AAA")
-                .status(Status.PENDING)
+                .OrderStatus(Status.PENDING)
                 .userId("user_1")
                 .build();
         orderRepository.save(order1);
 
         Order order2 = Order.builder()
                 .id("ORD-2026-BBB")
-                .status(Status.PAID)
+                .OrderStatus(Status.PAID)
                 .userId("user_2")
                 .build();
         orderRepository.save(order2);

@@ -1,6 +1,5 @@
 package com.example.ecommerce.service;
 
-import com.example.ecommerce.Enum.PaymentStatus;
 import com.example.ecommerce.Enum.Status;
 import com.example.ecommerce.dtos.OrderItemRequestDto;
 import com.example.ecommerce.dtos.OrderItemResponseDto;
@@ -67,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = Order.builder()
                 .userId(user.getId())
-                .status(Status.PENDING)
+                .OrderStatus(Status.PENDING)
                 .totalAmount(totalAmount)
                 .createdAt(LocalDateTime.now())
                 .orderedItems(new ArrayList<>())
@@ -112,7 +111,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void markAsPaid(String orderId) {
         Order order = findById(orderId);
-        order.setStatus(Status.PAID);
+        order.setOrderStatus(Status.PAID);
         orderRepository.save(order);
     }
 
@@ -194,7 +193,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderId(order.getId())
                 .items(itemResponses)
                 .totalAmount(order.getTotalAmount())
-                .status(order.getStatus())
+                .status(order.getOrderStatus())
                 .createdAt(order.getCreatedAt())
                 .build();
     }
@@ -202,7 +201,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order findById(String orderId){
         return orderRepository.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order not found" + orderId));
+                .orElseThrow(() -> new OrderNotFoundException("Order with id: " + orderId + "not found"));
 
     }
 }

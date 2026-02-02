@@ -21,7 +21,7 @@ public class Order {
     @Id
     private String id;
     private String userId;
-    private Status status;
+    private Status OrderStatus;
     private BigDecimal totalAmount;
     private LocalDateTime createdAt;
     private List<OrderItem> orderedItems;

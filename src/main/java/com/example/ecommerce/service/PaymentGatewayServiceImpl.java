@@ -1,44 +1,79 @@
 package com.example.ecommerce.service;
 
 import com.example.ecommerce.Enum.PaymentStatus;
+import com.example.ecommerce.dtos.PaystackInitResponse;
+import com.example.ecommerce.dtos.PaystackVerifyResponseDto;
 import com.example.ecommerce.exception.PaymentNotFoundException;
 import com.example.ecommerce.model.Payment;
 import com.example.ecommerce.repository.PaymentRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
-@RequiredArgsConstructor
 public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     @Autowired
     private PaymentRepository paymentRepository;
     @Autowired
     private OrderService orderService;
+    @Autowired
+    private RestTemplate restTemplate;
 
+    @Value("${paystack.base.url}")
+    private String baseUrl;
+
+    @Value("${paystack.secret.key}")
+    private String paystackSecretKey;
 
     @Override
-    public PaymentStatus checkPaymentStatus(String reference) {
-        return PaymentStatus.SUCCESS;
-    }
+    @Transactional
+    public String initiatePayment(BigDecimal totalAmount, String email, String orderId) {
+        try {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("email", email);
+        payload.put("amount", totalAmount.multiply(new BigDecimal(100)));
+        payload.put("callback_url", "http://your-frontend-link.com");
+        payload.put("metadata", Map.of("order_id", orderId));
 
-    @Override
-    public String initiatePayment(BigDecimal totalAmount, String usd, String orderId) {
-        String reference = "FAKE REF" + System.currentTimeMillis();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(paystackSecretKey);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+
+
+        PaystackInitResponse response = restTemplate.postForObject(
+                baseUrl + "/transaction/initialize", entity, PaystackInitResponse.class);
+
+        if (response == null || !response.isStatus()) {
+            throw new RuntimeException("Paystack Initialization Failed: " +
+                    (response != null ? response.getMessage() : "No Response"));
+        }
 
         Payment payment = new Payment();
-        payment.setReference(reference);
+        payment.setReference(response.getData().getReference());
         payment.setOrderId(orderId);
         payment.setAmount(totalAmount);
-        payment.setStatus(PaymentStatus.PENDING);
+        payment.setPaymentStatus(PaymentStatus.PENDING);
         payment.setTime(LocalDateTime.now());
 
         paymentRepository.save(payment);
-        return reference;
+
+        return response.getData().getAuthorizationUrl();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Could not initiate payment: " + e.getMessage());
+        }
     }
+
+
 
     @Override
     public Payment findByReference(String reference){
@@ -48,16 +83,30 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     @Override
+    @Transactional
     public void processPaymentStatus(String reference) {
-        PaymentStatus status = checkPaymentStatus(reference);
-        Payment payment = findByReference(reference);
-        System.out.println("Updating payment for ref: " + reference);
-        if (status == PaymentStatus.SUCCESS) {
-            payment.setStatus(PaymentStatus.SUCCESS);
-            payment.setTime(LocalDateTime.now());
-            paymentRepository.save(payment);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(paystackSecretKey);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-            orderService.markAsPaid(payment.getOrderId());
+        ResponseEntity<PaystackVerifyResponseDto> responseEntity = restTemplate.exchange(
+                baseUrl + "/transaction/verify/" + reference,
+                HttpMethod.GET,
+                entity,
+                PaystackVerifyResponseDto.class
+        );
+
+        PaystackVerifyResponseDto response = responseEntity.getBody();
+
+        if (response != null && "success".equals(response.getData().getStatus())) {
+            Payment payment = findByReference(reference);
+
+            if (payment.getPaymentStatus() != PaymentStatus.SUCCESS) {
+                payment.setPaymentStatus(PaymentStatus.SUCCESS);
+                paymentRepository.save(payment);
+
+                orderService.markAsPaid(payment.getOrderId());
+            }
         }
     }
 

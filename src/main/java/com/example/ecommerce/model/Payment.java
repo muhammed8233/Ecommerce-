@@ -20,12 +20,14 @@ import java.time.LocalDateTime;
 public class Payment {
     @Id
     private String id;
+
+    @Indexed
     private String orderId;
 
     @PositiveOrZero(message = "amount must be > 0")
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal amount;
-    private PaymentStatus status;
+    private PaymentStatus paymentStatus;
     private LocalDateTime time;
 
     @Indexed(unique = true)

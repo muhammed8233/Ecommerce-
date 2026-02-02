@@ -46,7 +46,7 @@ public class OrderController {
 
    @GetMapping
    public ResponseEntity<Page<OrderResponseDto>> getOrders(@RequestParam String search, @PageableDefault(size = 10,sort = "orderId",
-           direction = Sort.Direction.DESC)Pageable pageable){
+           direction = Sort.Direction.ASC)Pageable pageable){
 
        return ResponseEntity.ok(orderService.getOrders(search, pageable));
    }
