@@ -21,7 +21,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "products")
-public class Product {
+public class Product extends Audit{
 
     @Id
     private String id;

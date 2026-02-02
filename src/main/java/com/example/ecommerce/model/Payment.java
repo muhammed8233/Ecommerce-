@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "payments")
-public class Payment {
+public class Payment extends Audit{
     @Id
     private String id;
 

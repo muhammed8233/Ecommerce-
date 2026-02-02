@@ -123,14 +123,25 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
                 orderService.markAsPaid(payment.getOrderId());
             }
-        }
-        else if (response != null && "failed".equals(response.getData().getStatus())) {
-            payment.setPaymentStatus(PaymentStatus.FAILED);
-            paymentRepository.save(payment);
-            orderService.updateStatus(payment.getOrderId(), Status.CANCELED);
-            log.warn("Payment {} failed explicitly", reference);
-        }
-        else {
+        }else if (response != null && "abandoned".equals(response.getData().getStatus())) {
+            LocalDateTime minute = LocalDateTime.now().minusMinutes(30);
+
+            if(payment.getTime().isBefore(minute)) {
+
+                payment.setPaymentStatus(PaymentStatus.FAILED);
+                paymentRepository.save(payment);
+                orderService.updateStatus(payment.getOrderId(), Status.CANCELED);
+
+                log.warn("Payment {} timed out and was CANCELED after 30 mins", reference);
+            } else {
+                log.info("Payment {} is still within grace period. No action taken.", reference);
+            }
+        } else if (response != null && "failed".equals(response.getData().getStatus())) {
+                payment.setPaymentStatus(PaymentStatus.FAILED);
+                paymentRepository.save(payment);
+                orderService.updateStatus(payment.getOrderId(), Status.CANCELED);
+                log.warn("Payment {} failed explicitly", reference);
+            } else {
             log.info("Payment {} is still in progress (Status: {})", reference, response.getData().getStatus());
         }
     }

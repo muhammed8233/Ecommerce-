@@ -16,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "orders")
-public class Order {
+public class Order extends Audit{
 
     @Id
     private String id;
