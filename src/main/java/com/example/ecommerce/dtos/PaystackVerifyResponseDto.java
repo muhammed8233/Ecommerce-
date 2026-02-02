@@ -1,6 +1,5 @@
 package com.example.ecommerce.dtos;
 
-import com.example.ecommerce.model.PaystackData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,5 +12,5 @@ import lombok.NoArgsConstructor;
 public class PaystackVerifyResponseDto {
     private boolean status;
     private String message;
-    private PaystackData data;
+    private PaystackDataDto data;
 }

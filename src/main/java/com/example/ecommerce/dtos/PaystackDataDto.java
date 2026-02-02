@@ -1,4 +1,4 @@
-package com.example.ecommerce.model;
+package com.example.ecommerce.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,7 +9,7 @@ import java.util.Map;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PaystackData {
+public class PaystackDataDto {
     private String status;
     private String reference;
     private BigDecimal amount;

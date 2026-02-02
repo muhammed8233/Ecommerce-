@@ -1,12 +1,13 @@
-package com.example.ecommerce.model;
+package com.example.ecommerce.dtos;
 
+import com.example.ecommerce.model.Audit;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PaystackInitData {
+public class PaystackInitDataDto {
     @JsonProperty("authorization_url")
     private String authorizationUrl;
 

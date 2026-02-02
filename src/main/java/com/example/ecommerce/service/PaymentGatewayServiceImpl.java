@@ -2,7 +2,7 @@ package com.example.ecommerce.service;
 
 import com.example.ecommerce.Enum.PaymentStatus;
 import com.example.ecommerce.Enum.Status;
-import com.example.ecommerce.dtos.PaystackInitResponse;
+import com.example.ecommerce.dtos.PaystackInitResponseDto;
 import com.example.ecommerce.dtos.PaystackVerifyResponseDto;
 import com.example.ecommerce.exception.PaymentNotFoundException;
 import com.example.ecommerce.model.Payment;
@@ -65,8 +65,8 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
 
 
-        PaystackInitResponse response = restTemplate.postForObject(
-                baseUrl + "/transaction/initialize", entity, PaystackInitResponse.class);
+        PaystackInitResponseDto response = restTemplate.postForObject(
+                baseUrl + "/transaction/initialize", entity, PaystackInitResponseDto.class);
 
         if (response == null || !response.isStatus()) {
             throw new RuntimeException("Paystack Initialization Failed: " +

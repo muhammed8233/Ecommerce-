@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "inventory_movements")
-public class InventoryMovement {
+public class InventoryMovement extends Audit{
 
     @Id
     private String id;

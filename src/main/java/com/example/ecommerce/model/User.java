@@ -27,7 +27,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Document(collection = "user")
-public class User implements UserDetails {
+public class User extends Audit implements UserDetails{
     @Id
     private String id;
 
