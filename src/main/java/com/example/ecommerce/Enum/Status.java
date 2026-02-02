@@ -1,5 +1,5 @@
 package com.example.ecommerce.Enum;
 
 public enum Status {
-    PENDING, PAID
+    PENDING, PAID, CANCELED
 }

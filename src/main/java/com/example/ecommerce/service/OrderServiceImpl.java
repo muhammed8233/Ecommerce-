@@ -31,6 +31,8 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.example.ecommerce.service.PaymentGatewayServiceImpl.log;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -197,6 +199,30 @@ public class OrderServiceImpl implements OrderService {
                 .createdAt(order.getCreatedAt())
                 .build();
     }
+
+    @Transactional
+    @Override
+    public void updateStatus(String orderId, Status newStatus) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
+
+        if (newStatus == Status.CANCELED) {
+            restockInventory(order);
+        }
+
+        order.setOrderStatus(newStatus);
+        orderRepository.save(order);
+
+        log.info("Order {} status updated to {}", orderId, newStatus);
+    }
+
+    private void restockInventory(Order order) {
+        order.getOrderedItems().forEach(item -> {
+            productService.increaseStock(item.getProductId(), item.getQuantity());
+        });
+    }
+
 
     @Override
     public Order findById(String orderId){

@@ -5,12 +5,14 @@ import com.example.ecommerce.model.Product;
 import com.example.ecommerce.dtos.ProductRequestDto;
 import com.example.ecommerce.dtos.ProductResponseDto;
 import com.example.ecommerce.repository.ProductRepository;
+import com.mongodb.client.result.UpdateResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
 
@@ -116,4 +118,18 @@ public class ProductServiceImpl implements ProductService {
     public void deleteAll() {
         productRepository.deleteAll();
     }
+
+    @Override
+    public void increaseStock(String productId, Integer quantity) {
+        Query query = new Query(Criteria.where("_id").is(productId));
+
+        Update update = new Update().inc("stockQuantity", quantity);
+
+        UpdateResult result = mongoTemplate.updateFirst(query, update, Product.class);
+
+        if (result.getMatchedCount() == 0) {
+            throw new ProductNotFoundException("Product not found with ID: " + productId);
+        }
+    }
+
 }

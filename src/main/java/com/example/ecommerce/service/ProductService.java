@@ -23,5 +23,7 @@ public interface ProductService {
     List<Product> findAllById(List<String> productIds);
 
     void deleteAll();
+
+    void increaseStock(String productId, Integer quantity);
 }
 

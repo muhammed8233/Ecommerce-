@@ -1,11 +1,14 @@
 package com.example.ecommerce.service;
 
 import com.example.ecommerce.Enum.PaymentStatus;
+import com.example.ecommerce.Enum.Status;
 import com.example.ecommerce.dtos.PaystackInitResponse;
 import com.example.ecommerce.dtos.PaystackVerifyResponseDto;
 import com.example.ecommerce.exception.PaymentNotFoundException;
 import com.example.ecommerce.model.Payment;
 import com.example.ecommerce.repository.PaymentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -20,6 +23,7 @@ import java.util.Map;
 
 @Service
 public class PaymentGatewayServiceImpl implements PaymentGatewayService {
+    static final Logger log = LoggerFactory.getLogger(PaymentGatewayServiceImpl.class);
     @Autowired
     private PaymentRepository paymentRepository;
     @Autowired
@@ -97,9 +101,9 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         );
 
         PaystackVerifyResponseDto response = responseEntity.getBody();
+        Payment payment = findByReference(reference);
 
         if (response != null && "success".equals(response.getData().getStatus())) {
-            Payment payment = findByReference(reference);
 
             if (payment.getPaymentStatus() != PaymentStatus.SUCCESS) {
                 payment.setPaymentStatus(PaymentStatus.SUCCESS);
@@ -107,6 +111,16 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
                 orderService.markAsPaid(payment.getOrderId());
             }
+        } else if (response != null) {
+            String paystackStatus = response.getData().getStatus();
+
+            payment.setPaymentStatus(PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+
+
+            orderService.updateStatus(payment.getOrderId(), Status.CANCELED);
+
+            log.warn("Payment {} failed with status: {}", reference, paystackStatus);
         }
     }
 
