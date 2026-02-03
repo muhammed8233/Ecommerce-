@@ -1,7 +1,6 @@
 package com.example.ecommerce.service;
 
 import com.example.ecommerce.exception.InsufficientStockException;
-import com.example.ecommerce.exception.ProductNotFoundException;
 import com.example.ecommerce.repository.InventoryMovementRepository;
 import com.example.ecommerce.Enum.Reason;
 import com.example.ecommerce.model.InventoryMovement;
@@ -9,7 +8,6 @@ import com.example.ecommerce.model.Product;
 import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -32,9 +30,8 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
 
         product.setStockQuantity(product.getStockQuantity() + quantity);
 
-        Product updatedProduct = productService.save(product);
+        Product updatedProduct = productService.saveProduct(product);
 
-        // 4. Record movement
         InventoryMovement movement = InventoryMovement.builder()
                 .product(updatedProduct)
                 .quantityChange(quantity)
