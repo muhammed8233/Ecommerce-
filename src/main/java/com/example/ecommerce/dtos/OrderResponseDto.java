@@ -19,6 +19,4 @@ public class OrderResponseDto {
     private List<OrderItemResponseDto> items;
     private BigDecimal totalAmount;
     private Status status;
-    private LocalDateTime createdAt;
-
 }

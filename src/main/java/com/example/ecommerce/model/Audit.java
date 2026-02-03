@@ -1,6 +1,8 @@
 package com.example.ecommerce.model;
 
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 public abstract class Audit {
     @CreatedDate
     @Field("created_at")
+    @JsonProperty("createdAt")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
