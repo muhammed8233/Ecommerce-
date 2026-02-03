@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -70,7 +69,6 @@ public class OrderServiceImpl implements OrderService {
                 .userId(user.getId())
                 .OrderStatus(Status.PENDING)
                 .totalAmount(totalAmount)
-                .createdAt(LocalDateTime.now())
                 .orderedItems(new ArrayList<>())
                 .build();
 
@@ -196,7 +194,6 @@ public class OrderServiceImpl implements OrderService {
                 .items(itemResponses)
                 .totalAmount(order.getTotalAmount())
                 .status(order.getOrderStatus())
-                .createdAt(order.getCreatedAt())
                 .build();
     }
 

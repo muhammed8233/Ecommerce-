@@ -23,24 +23,18 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
     private InventoryMovementRepository inventoryMovementRepository;
     @Autowired
     private MongoTemplate mongoTemplate;
+    @Autowired
+    private ProductService productService;
 
     @Override
     public void restockProduct(String productId, int quantity) {
+        Product product = productService.findById(productId);
 
-        Query query = new Query(Criteria.where("_id").is(productId));
-        Update update = new Update().inc("stockQuantity", quantity);
+        product.setStockQuantity(product.getStockQuantity() + quantity);
 
-        Product updatedProduct = mongoTemplate.findAndModify(
-                query,
-                update,
-                new FindAndModifyOptions().returnNew(true),
-                Product.class
-        );
+        Product updatedProduct = productService.save(product);
 
-        if (updatedProduct == null) {
-            throw new ProductNotFoundException("Product not found: " + productId);
-        }
-
+        // 4. Record movement
         InventoryMovement movement = InventoryMovement.builder()
                 .product(updatedProduct)
                 .quantityChange(quantity)
@@ -49,6 +43,7 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
 
         inventoryMovementRepository.save(movement);
     }
+
 
     @Override
     public void deductStock(String productId, int quantity) {

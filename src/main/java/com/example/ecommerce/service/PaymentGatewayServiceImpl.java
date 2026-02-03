@@ -78,7 +78,6 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         payment.setOrderId(orderId);
         payment.setAmount(totalAmount);
         payment.setPaymentStatus(PaymentStatus.PENDING);
-        payment.setTime(LocalDateTime.now());
 
         paymentRepository.save(payment);
 

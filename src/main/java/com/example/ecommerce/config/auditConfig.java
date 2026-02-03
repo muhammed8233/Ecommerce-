@@ -15,12 +15,10 @@ import java.util.Optional;
 public class auditConfig {
     @Bean
     public AuditorAware<String> auditorProvider() {
-        return () -> {
-            @Nullable Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated()) {
-                return Optional.of("SYSTEM");
-            }
-            return Optional.of(authentication.getName());
-        };
+        return () -> Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                .filter(Authentication::isAuthenticated)
+                .map(Authentication::getName)
+                .or(() -> Optional.of("SYSTEM"));
     }
+
 }

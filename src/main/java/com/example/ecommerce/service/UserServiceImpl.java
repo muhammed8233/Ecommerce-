@@ -49,7 +49,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         user.setEmail(userDto.getEmail());
         user.setName(userDto.getName());
         user.setPassword(userDto.getPassword());
-        user.setRole(Role.USER);
+        user.setRole(Role.ADMIN);
 
         return userRepository.save(user);
     }

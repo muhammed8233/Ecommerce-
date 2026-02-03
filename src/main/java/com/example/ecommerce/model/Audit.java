@@ -1,6 +1,6 @@
 package com.example.ecommerce.model;
 
-import lombok.Data;
+
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;

@@ -23,7 +23,6 @@ public class Order extends Audit{
     private String userId;
     private Status OrderStatus;
     private BigDecimal totalAmount;
-    private LocalDateTime createdAt;
     private List<OrderItem> orderedItems;
 
 
