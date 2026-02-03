@@ -2,7 +2,6 @@ package com.example.ecommerce.service;
 
 import com.example.ecommerce.Enum.Role;
 import com.example.ecommerce.dtos.RegisterRequestDto;
-import com.example.ecommerce.exception.UserAlreadyExistException;
 import com.example.ecommerce.model.User;
 import com.example.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.UUID;
+
+import static com.example.ecommerce.service.PaymentGatewayServiceImpl.log;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -53,15 +53,18 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .email(dto.getEmail().toLowerCase().trim())
                 .password(dto.getPassword())
                 .role(Role.USER)
-                .verificationToken(UUID.randomUUID().toString())
+                .verificationToken(String.valueOf(new java.security.SecureRandom().nextInt(9000) + 1000))
                 .tokenExpiry(LocalDateTime.now().plusHours(24))
                 .isEnabled(false)
                 .build();
 
         User savedUser = userRepository.save(user);
 
+        try{
         emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationToken());
-
+        } catch (Exception e) {
+            log.error("Failed to send verification email to {}", savedUser.getEmail());
+        }
         return savedUser;
     }
 
