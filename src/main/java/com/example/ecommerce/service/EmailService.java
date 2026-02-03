@@ -6,7 +6,6 @@ import org.springframework.scheduling.annotation.Async;
 
 public interface EmailService {
 
-
     @Async
     void sendVerificationEmail(String toEmail, String token) throws MessagingException;
 }

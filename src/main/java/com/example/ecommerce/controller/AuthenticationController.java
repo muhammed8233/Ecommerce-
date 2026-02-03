@@ -7,10 +7,9 @@ import com.example.ecommerce.dtos.RegisterRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping(path = "api/v1/auth")
@@ -27,7 +26,17 @@ public class AuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponseDto> authenticate(
-            @RequestBody AuthenticationRequestDto request){
+            @RequestBody @Valid AuthenticationRequestDto request){
         return ResponseEntity.ok(authenticationService.authenticate(request));
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyUser(@RequestParam("token") String token) {
+       return authenticationService.verifyToken(token);
+    }
+
+    @PostMapping("/resend-token")
+    public ResponseEntity<String> resendToken(@RequestParam("email") String email) {
+        return authenticationService.resendVerificationToken(email);
     }
 }

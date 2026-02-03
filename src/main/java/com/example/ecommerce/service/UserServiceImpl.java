@@ -68,4 +68,18 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         return savedUser;
     }
 
+    @Override
+    public User findByVerificationToken(String token) {
+        return userRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new RuntimeException("Invalid verification token"));
+    }
+
+    @Override
+    public void updateUser(User user) {
+        if (!userRepository.existsById(user.getId())) {
+            throw new UserNotFoundException("Cannot update: User not found");
+        }
+        userRepository.save(user);
+    }
+
 }

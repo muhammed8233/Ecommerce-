@@ -9,4 +9,8 @@ public interface UserService {
     void deleteAll();
 
     User saveUser(RegisterRequestDto userDto);
+
+    User findByVerificationToken(String token);
+
+    void updateUser(User user);
 }
