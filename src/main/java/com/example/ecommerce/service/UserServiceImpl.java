@@ -11,13 +11,17 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private EmailService emailService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -38,19 +42,27 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public void deleteAll() {
         userRepository.deleteAll();
     }
-
     @Override
-    public User saveUser(RegisterRequestDto userDto) {
-        if (userRepository.existsByEmail(userDto.getEmail())) {
-            throw new UserAlreadyExistException("Email already exists");
+    public User saveUser(RegisterRequestDto dto) {
+        if (userRepository.existsByEmail(dto.getEmail())) {
+            throw new RuntimeException("Email already in use");
         }
 
-        User user = new User();
-        user.setEmail(userDto.getEmail());
-        user.setName(userDto.getName());
-        user.setPassword(userDto.getPassword());
-        user.setRole(Role.ADMIN);
+        User user = User.builder()
+                .name(dto.getName())
+                .email(dto.getEmail().toLowerCase().trim())
+                .password(dto.getPassword())
+                .role(Role.USER)
+                .verificationToken(UUID.randomUUID().toString())
+                .tokenExpiry(LocalDateTime.now().plusHours(24))
+                .isEnabled(false)
+                .build();
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationToken());
+
+        return savedUser;
     }
+
 }
