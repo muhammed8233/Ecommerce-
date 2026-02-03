@@ -2,6 +2,7 @@ package com.example.ecommerce.service;
 
 import com.example.ecommerce.Enum.Role;
 import com.example.ecommerce.dtos.RegisterRequestDto;
+import com.example.ecommerce.exception.UserNotFoundException;
 import com.example.ecommerce.model.User;
 import com.example.ecommerce.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +55,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .password(dto.getPassword())
                 .role(Role.USER)
                 .verificationToken(String.valueOf(new java.security.SecureRandom().nextInt(9000) + 1000))
-                .tokenExpiry(LocalDateTime.now().plusHours(24))
+                .tokenExpiry(LocalDateTime.now().plusMinutes(30))
                 .isEnabled(false)
                 .build();
 
