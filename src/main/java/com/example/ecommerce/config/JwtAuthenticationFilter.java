@@ -37,6 +37,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+
+        if (request.getServletPath().contains("/api/v1/payments/paystack-webhook")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             final String authHeader = request.getHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
