@@ -36,6 +36,7 @@ class InventoryMovementServiceImplTest {
     @BeforeEach
     void setup(){
         inventoryMovementRepository.deleteAll();
+        productService.deleteAll();
     }
 
 

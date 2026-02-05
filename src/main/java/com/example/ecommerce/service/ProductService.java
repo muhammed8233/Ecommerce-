@@ -25,6 +25,8 @@ public interface ProductService {
 
     void increaseStock(String productId, Integer quantity);
 
+    void deductStock(String productId, int quantity);
+
     Product saveProduct(Product product);
 }
 

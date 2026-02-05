@@ -1,17 +1,12 @@
 package com.example.ecommerce.service;
 
-import com.example.ecommerce.exception.InsufficientStockException;
 import com.example.ecommerce.repository.InventoryMovementRepository;
 import com.example.ecommerce.Enum.Reason;
 import com.example.ecommerce.model.InventoryMovement;
 import com.example.ecommerce.model.Product;
-import com.mongodb.client.result.UpdateResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -39,22 +34,5 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
                 .build();
 
         inventoryMovementRepository.save(movement);
-    }
-
-
-    @Override
-    public void deductStock(String productId, int quantity) {
-
-        Query query = new Query(Criteria.where("_id").is(productId)
-                .and("stockQuantity").gte(quantity)
-        );
-
-        Update update = new Update().inc("stockQuantity", -quantity);
-
-        UpdateResult result = mongoTemplate.updateFirst(query, update, Product.class);
-
-        if (result.getModifiedCount() == 0) {
-            throw new InsufficientStockException("Not enough stock for product: " + productId);
-        }
     }
 }

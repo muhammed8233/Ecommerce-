@@ -1,7 +1,7 @@
 package com.example.ecommerce.model;
+
 import com.example.ecommerce.Enum.Status;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 

@@ -1,5 +1,6 @@
 package com.example.ecommerce.service;
 
+import com.example.ecommerce.exception.InsufficientStockException;
 import com.example.ecommerce.exception.ProductNotFoundException;
 import com.example.ecommerce.model.Product;
 import com.example.ecommerce.dtos.ProductRequestDto;
@@ -43,7 +44,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductResponseDto updateProduct(String id, ProductRequestDto request) {
-        Product product = productRepository.findById(id).orElseThrow();
+        Product product = productRepository.findById(id)
+                .orElseThrow(()-> new ProductNotFoundException("product with id: "+ id + " not found"));
         product.setProductName(request.getProductName());
         product.setCategory(request.getCategory());
         product.setDescription(request.getDescription());
@@ -60,7 +62,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Product findProductById(String productId) {
         return productRepository.findById(productId)
-                .orElseThrow(()-> new ProductNotFoundException("product with id"+productId+ "not found"));
+                .orElseThrow(()-> new ProductNotFoundException("product with id: "+ productId + " not found"));
     }
 
     @Override
@@ -131,10 +133,19 @@ public class ProductServiceImpl implements ProductService {
             throw new ProductNotFoundException("Product not found with ID: " + productId);
         }
     }
+    @Override
+    public void deductStock(String productId, int quantity) {
+        Product product = productRepository.findById(productId).orElseThrow();
+
+        if (quantity > product.getStockQuantity()) {
+            throw new InsufficientStockException("Not enough stock for product: " + productId);
+        }
+        product.setStockQuantity(product.getStockQuantity() - quantity);
+        productRepository.save(product);
+    }
 
     @Override
     public Product saveProduct(Product product) {
         return productRepository.save(product);
     }
-
 }

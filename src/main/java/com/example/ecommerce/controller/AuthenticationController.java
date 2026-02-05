@@ -9,8 +9,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-
 @RestController
 @RequestMapping(path = "api/v1/auth")
 @RequiredArgsConstructor
@@ -30,7 +28,7 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticationService.authenticate(request));
     }
 
-    @GetMapping("/verify")
+    @PostMapping("/verify-token")
     public ResponseEntity<String> verifyUser(@RequestParam("token") String token) {
        return authenticationService.verifyToken(token);
     }

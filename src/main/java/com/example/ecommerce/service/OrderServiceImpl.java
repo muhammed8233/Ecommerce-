@@ -11,6 +11,7 @@ import com.example.ecommerce.exception.ProductNotFoundException;
 import com.example.ecommerce.model.*;
 import com.example.ecommerce.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,11 +31,10 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.example.ecommerce.service.PaymentGatewayServiceImpl.log;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class OrderServiceImpl implements OrderService {
 
     @Autowired
@@ -49,6 +49,7 @@ public class OrderServiceImpl implements OrderService {
     private InventoryMovementService inventoryMovementService;
     @Autowired
     private MongoTemplate mongoTemplate;
+
 
     @Override
     public String initiatePayment(String orderId){
@@ -76,7 +77,7 @@ public class OrderServiceImpl implements OrderService {
                 (orderItemRequestDto -> {
                     Product product = productService.findById(orderItemRequestDto.getProductId());
 
-                    inventoryMovementService.deductStock(product.getId(), orderItemRequestDto.getQuantity());
+                    productService.deductStock(product.getId(), orderItemRequestDto.getQuantity());
 
                     OrderItem orderItem = OrderItem.builder()
                             .productId(product.getId())

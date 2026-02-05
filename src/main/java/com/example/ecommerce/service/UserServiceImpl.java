@@ -1,11 +1,15 @@
 package com.example.ecommerce.service;
 
+import ch.qos.logback.classic.Logger;
 import com.example.ecommerce.Enum.Role;
 import com.example.ecommerce.dtos.RegisterRequestDto;
+import com.example.ecommerce.exception.UserAlreadyExistException;
 import com.example.ecommerce.exception.UserNotFoundException;
 import com.example.ecommerce.model.User;
 import com.example.ecommerce.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,10 +17,12 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import static com.example.ecommerce.service.PaymentGatewayServiceImpl.log;
 
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Autowired
@@ -24,19 +30,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Autowired
     private EmailService emailService;
 
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        return new User(user.getEmail(), user.getPassword(), new
-                ArrayList<>());
-    }
 
     @Override
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(()-> new UsernameNotFoundException("user with email: "+ email + " not found"));
+                .orElseThrow(()-> new UserNotFoundException("user with email: "+ email + " not found"));
     }
 
     @Override
@@ -46,7 +44,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public User saveUser(RegisterRequestDto dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new UserAlreadyExistException("User with email: "+ dto.getEmail() +" already exist");
         }
 
         User user = User.builder()
@@ -55,7 +53,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .password(dto.getPassword())
                 .role(Role.USER)
                 .verificationToken(String.valueOf(new java.security.SecureRandom().nextInt(9000) + 1000))
-                .tokenExpiry(LocalDateTime.now().plusMinutes(30))
+                .tokenExpiry(LocalDateTime.now().plusMinutes(5))
                 .isEnabled(false)
                 .build();
 
@@ -78,9 +76,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public void updateUser(User user) {
         if (!userRepository.existsById(user.getId())) {
-            throw new UserNotFoundException("Cannot update: User not found");
+            throw new UserNotFoundException("Cannot update: "+ user.getId() + " User not found");
         }
         userRepository.save(user);
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(()-> new UserNotFoundException("User with email: "+ email +" not found"));
+    }
 }

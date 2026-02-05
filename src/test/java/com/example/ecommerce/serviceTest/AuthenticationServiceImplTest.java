@@ -47,7 +47,7 @@ class AuthenticationServiceImplTest {
         assertNotNull(response.getToken());
 
         User savedUser = userService.findByEmail("john@example.com");
-        assertEquals("john", savedUser.getName());
+        assertEquals("John", savedUser.getName());
         assertTrue(passwordEncoder.matches("password123", savedUser.getPassword()));
     }
 
@@ -58,7 +58,8 @@ class AuthenticationServiceImplTest {
                 .email("jane@example.com")
                 .password(passwordEncoder.encode("secret"))
                 .build();
-        userService.saveUser(user);
+        User user1 = userService.saveUser(user);
+        authService.verifyToken(user1.getVerificationToken());
 
         AuthenticationRequestDto authRequest = AuthenticationRequestDto.builder()
                 .email("jane@example.com")

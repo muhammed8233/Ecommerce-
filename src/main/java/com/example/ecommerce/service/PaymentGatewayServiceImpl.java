@@ -7,8 +7,7 @@ import com.example.ecommerce.dtos.PaystackVerifyResponseDto;
 import com.example.ecommerce.exception.PaymentNotFoundException;
 import com.example.ecommerce.model.Payment;
 import com.example.ecommerce.repository.PaymentRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -24,8 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class PaymentGatewayServiceImpl implements PaymentGatewayService {
-    static final Logger log = LoggerFactory.getLogger(PaymentGatewayServiceImpl.class);
+
     @Autowired
     private PaymentRepository paymentRepository;
     @Autowired
@@ -47,10 +47,6 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         if (currentUserEmail == null || !currentUserEmail.contains("@")) {
             throw new IllegalArgumentException("A valid user email is required for payment");
         }
-
-        System.out.println("DEBUG: Attempting Paystack init with email: [" + currentUserEmail + "]");
-        System.out.println("DEBUG: Key Length: " + (paystackSecretKey != null ? paystackSecretKey.length() : "NULL"));
-        System.out.println("DEBUG: Key Starts With: " + (paystackSecretKey != null && paystackSecretKey.length() > 7 ? paystackSecretKey.substring(0, 7) : "INVALID"));
 
         try {
         Map<String, Object> payload = new HashMap<>();
@@ -156,7 +152,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     }
 
     @Override
-    public void savepayment(Payment payment) {
+    public void savePayment(Payment payment) {
         paymentRepository.save(payment);
     }
 }

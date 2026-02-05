@@ -17,7 +17,7 @@ public interface PaymentGatewayService {
 
     List<Payment> findAll();
 
-    void savepayment(Payment payment);
+    void savePayment(Payment payment);
 }
 
 

@@ -150,7 +150,7 @@ class OrderServiceImplTest {
         payment.setOrderId(order.getId());
         payment.setAmount(order.getTotalAmount());
         payment.setPaymentStatus(PaymentStatus.PENDING);
-        paymentGatewayService.savepayment(payment);
+        paymentGatewayService.savePayment(payment);
 
         paymentGatewayService.processPaymentStatus(reference);
 
