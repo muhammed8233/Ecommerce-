@@ -61,7 +61,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("email", currentUserEmail);
         payload.put("amount", totalAmount.multiply(new BigDecimal(100)));
-        payload.put("callback_url", "https://nonenlightened-tonsorial-august.ngrok-free.dev/api/v1/orders/verify-payment");
+        payload.put("callback_url", "https://nonenlightened-tonsorial-august.ngrok-free.dev/api/v1/orders/" + orderId);
         payload.put("metadata", Map.of("order_id", orderId));
 
         HttpHeaders headers = new HttpHeaders();

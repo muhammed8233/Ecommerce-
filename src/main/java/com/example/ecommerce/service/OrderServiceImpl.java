@@ -196,7 +196,8 @@ public class OrderServiceImpl implements OrderService {
                 .map(this::mapToOrderResponse);
     }
 
-    private OrderResponseDto mapToOrderResponse(Order order) {
+    @Override
+    public OrderResponseDto mapToOrderResponse(Order order) {
         List<OrderItemResponseDto> itemResponses = (order.getOrderedItems() == null)
                 ? Collections.emptyList()
                 : order.getOrderedItems().stream()

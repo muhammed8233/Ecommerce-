@@ -2,6 +2,7 @@ package com.example.ecommerce.controller;
 
 import com.example.ecommerce.dtos.OrderRequestDto;
 import com.example.ecommerce.dtos.OrderResponseDto;
+import com.example.ecommerce.model.Order;
 import com.example.ecommerce.service.OrderService;
 import com.example.ecommerce.service.PaymentGatewayService;
 import lombok.RequiredArgsConstructor;
@@ -31,17 +32,11 @@ public class OrderController {
        return new ResponseEntity<>(orderService.placeOrder(request), HttpStatus.CREATED);
    }
 
-    @PostMapping("/{orderId}/initiate-payment")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<String> initiatePayment(@PathVariable("orderId") String orderId){
+   @PostMapping("/{orderId}/initiate-payment")
+   @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+   public ResponseEntity<String> initiatePayment(@PathVariable("orderId") String orderId){
         String payment =orderService.initiatePayment(orderId);
         return ResponseEntity.ok(payment);
-    }
-
-   @PostMapping("/verify-payment")
-   public ResponseEntity<String> verifyPayment(@RequestParam String reference){
-       paymentGatewayService.processPaymentStatus(reference);
-       return ResponseEntity.ok("verified successfully");
    }
 
    @GetMapping
@@ -51,4 +46,10 @@ public class OrderController {
        return ResponseEntity.ok(orderService.getOrders(search, pageable));
    }
 
+   @GetMapping("/{id}")
+   public ResponseEntity<OrderResponseDto> getOrderById(@PathVariable String id,
+                                                        @RequestParam(value = "reference", required = false) String reference) {
+       Order order = orderService.findById(id);
+       return ResponseEntity.ok(orderService.mapToOrderResponse(order));
+   }
 }

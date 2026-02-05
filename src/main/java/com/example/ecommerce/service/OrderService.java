@@ -20,6 +20,8 @@ public interface OrderService {
 
     @Nullable Page<OrderResponseDto> getOrders(String search, Pageable pageable);
 
+    OrderResponseDto mapToOrderResponse(Order order);
+
     @Transactional
     void updateStatus(String orderId, OrderedStatus newOrderedStatus);
 
