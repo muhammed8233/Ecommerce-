@@ -28,6 +28,7 @@ public class SecurityConfig {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/payments/paystack-webhook").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/v1/products/**").permitAll()
                         .requestMatchers("/api/v1/products/create", "/api/v1/products/restock").hasRole("ADMIN")
                         .requestMatchers("/api/v1/orders/**").authenticated()

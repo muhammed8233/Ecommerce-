@@ -18,6 +18,9 @@ public interface PaymentGatewayService {
     List<Payment> findAll();
 
     void savePayment(Payment payment);
+
+    void handlePaystackWebhook(String payload);
+
 }
 
 

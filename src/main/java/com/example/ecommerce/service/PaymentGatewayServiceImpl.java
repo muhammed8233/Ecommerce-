@@ -16,6 +16,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -33,6 +35,8 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     private OrderService orderService;
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private  ObjectMapper objectMapper;
 
     @Value("${paystack.base.url}")
     private String baseUrl;
@@ -160,6 +164,25 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     @Override
     public void savePayment(Payment payment) {
         paymentRepository.save(payment);
+    }
+
+    @Override
+    public void handlePaystackWebhook(String payload) {
+        try {
+            JsonNode rootNode = objectMapper.readTree(payload);
+
+            String reference = rootNode.path("data").path("reference").asText();
+            String event = rootNode.path("event").asText();
+
+            log.info("Received Paystack event: {} for reference: {}", event, reference);
+
+            if ("charge.success".equals(event) && !reference.isEmpty()) {
+                processPaymentStatus(reference);
+            }
+
+        } catch (Exception e) {
+            log.error("Error processing Paystack webhook: {}", e.getMessage());
+        }
     }
 
 }
