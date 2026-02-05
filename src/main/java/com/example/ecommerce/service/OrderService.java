@@ -1,6 +1,6 @@
 package com.example.ecommerce.service;
 
-import com.example.ecommerce.Enum.Status;
+import com.example.ecommerce.Enum.OrderedStatus;
 import com.example.ecommerce.model.Order;
 import com.example.ecommerce.dtos.OrderRequestDto;
 import com.example.ecommerce.dtos.OrderResponseDto;
@@ -21,7 +21,7 @@ public interface OrderService {
     @Nullable Page<OrderResponseDto> getOrders(String search, Pageable pageable);
 
     @Transactional
-    void updateStatus(String orderId, Status newStatus);
+    void updateStatus(String orderId, OrderedStatus newOrderedStatus);
 
     Order findById(String orderId);
 }

@@ -1,6 +1,6 @@
 package com.example.ecommerce.serviceTest;
 
-import com.example.ecommerce.Enum.Status;
+import com.example.ecommerce.Enum.OrderedStatus;
 import com.example.ecommerce.dtos.*;
 import com.example.ecommerce.exception.InsufficientStockException;
 import com.example.ecommerce.model.Order;
@@ -115,7 +115,7 @@ class OrderServiceImplTest {
         assertEquals("Bread", response.getItems().getFirst().getProductName());
         assertEquals(5, response.getItems().getFirst().getQuantity());
         assertEquals(new BigDecimal("10000.00"), response.getTotalAmount());
-        assertEquals(Status.PENDING, response.getStatus());
+        assertEquals(OrderedStatus.PENDING, response.getOrderedStatus());
 
         Product updatedProduct = productService.findById(savedProductId);
         assertEquals(15, updatedProduct.getStockQuantity());
@@ -142,7 +142,7 @@ class OrderServiceImplTest {
 
         Order order = new Order();
         order.setTotalAmount(new BigDecimal("30000.00"));
-        order.setOrderStatus(Status.PENDING);
+        order.setOrderedStatus(OrderedStatus.PENDING);
         order = orderRepository.save(order);
 
         Payment payment = new Payment();
@@ -155,7 +155,7 @@ class OrderServiceImplTest {
         paymentGatewayService.processPaymentStatus(reference);
 
         Order updatedOrder = orderRepository.findById(order.getId()).get();
-        assertEquals(Status.PAID, updatedOrder.getOrderStatus());
+        assertEquals(OrderedStatus.PAID, updatedOrder.getOrderedStatus());
     }
 
 
@@ -165,14 +165,14 @@ class OrderServiceImplTest {
     void getOrders_ShouldReturnFilteredResults_ById() {
         Order order1 = Order.builder()
                 .id("ORD-2026-AAA")
-                .OrderStatus(Status.PENDING)
+                .orderedStatus(OrderedStatus.PENDING)
                 .userId("user_1")
                 .build();
         orderRepository.save(order1);
 
         Order order2 = Order.builder()
                 .id("ORD-2026-BBB")
-                .OrderStatus(Status.PAID)
+                .orderedStatus(OrderedStatus.PAID)
                 .userId("user_2")
                 .build();
         orderRepository.save(order2);

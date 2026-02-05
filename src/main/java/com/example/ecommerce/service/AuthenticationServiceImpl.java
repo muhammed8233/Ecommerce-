@@ -46,7 +46,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         User user = userService.findByVerificationToken(token);
 
         if (user.getTokenExpiry().isBefore(LocalDateTime.now())) {
-            return ResponseEntity.badRequest().body("Token has expired. Please register again.");
+            return ResponseEntity.badRequest().body("Token has expired. please try again with new token");
         }
 
         user.setEnabled(true);

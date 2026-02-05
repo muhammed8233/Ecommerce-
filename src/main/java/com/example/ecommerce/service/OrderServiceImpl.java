@@ -1,6 +1,7 @@
 package com.example.ecommerce.service;
 
-import com.example.ecommerce.Enum.Status;
+import com.example.ecommerce.Enum.OrderedStatus;
+import com.example.ecommerce.Enum.PaymentStatus;
 import com.example.ecommerce.dtos.OrderItemRequestDto;
 import com.example.ecommerce.dtos.OrderItemResponseDto;
 import com.example.ecommerce.dtos.OrderRequestDto;
@@ -68,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = Order.builder()
                 .userId(user.getId())
-                .OrderStatus(Status.PENDING)
+                .orderedStatus(OrderedStatus.PENDING)
                 .totalAmount(totalAmount)
                 .orderedItems(new ArrayList<>())
                 .build();
@@ -110,11 +111,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public void markAsPaid(String orderId) {
         Order order = findById(orderId);
-        order.setOrderStatus(Status.PAID);
+
+        if (order.getOrderedStatus() == OrderedStatus.CANCELLED) {
+            log.info("Attempting to re-reserve stock for revived Order: {}", orderId);
+
+            boolean isStockReReserved = inventoryMovementService.reReserveStock(order);
+
+            if (!isStockReReserved) {
+                log.error("Revival Failed: Order {} paid but items are now out of stock!", orderId);
+                orderRepository.save(order);
+                return;
+            }
+        }
+
+        order.setOrderedStatus(OrderedStatus.PAID);
         orderRepository.save(order);
+        log.info("Order {} successfully marked as PAID", orderId);
     }
+
 
     private BigDecimal calculateTotal(OrderRequestDto request) {
         return request.getItemList().stream()
@@ -194,25 +211,25 @@ public class OrderServiceImpl implements OrderService {
                 .orderId(order.getId())
                 .items(itemResponses)
                 .totalAmount(order.getTotalAmount())
-                .status(order.getOrderStatus())
+                .orderedStatus(order.getOrderedStatus())
                 .build();
     }
 
     @Transactional
     @Override
-    public void updateStatus(String orderId, Status newStatus) {
+    public void updateStatus(String orderId, OrderedStatus newOrderedStatus) {
 
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new OrderNotFoundException("Order not found with ID: " + orderId));
 
-        if (newStatus == Status.CANCELED) {
+        if (newOrderedStatus == OrderedStatus.CANCELLED) {
             restockInventory(order);
         }
 
-        order.setOrderStatus(newStatus);
+        order.setOrderedStatus(newOrderedStatus);
         orderRepository.save(order);
 
-        log.info("Order {} status updated to {}", orderId, newStatus);
+        log.info("Order {} orderedStatus updated to {}", orderId, newOrderedStatus);
     }
 
     private void restockInventory(Order order) {
@@ -228,4 +245,27 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new OrderNotFoundException("Order with id: " + orderId + "not found"));
 
     }
+
+    public void handlePaymentWebhook(String orderId, PaymentStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(orderId));
+
+        if (status == PaymentStatus.SUCCESS) {
+            if (order.getOrderedStatus() == OrderedStatus.CANCELLED) {
+
+                boolean backInStock = inventoryMovementService.reReserveStock(order);
+
+                if (backInStock) {
+                    order.setOrderedStatus(OrderedStatus.PAID);
+                    log.info("Order {} was restored after late payment success.", orderId);
+                } else {
+                    log.warn("Order {} paid late but items are out of stock. Manual refund required.", orderId);
+                }
+            } else {
+                order.setOrderedStatus(OrderedStatus.PAID);
+            }
+            orderRepository.save(order);
+        }
+    }
+
 }

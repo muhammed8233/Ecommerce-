@@ -2,11 +2,10 @@ package com.example.ecommerce.dtos;
 
 
 
-import com.example.ecommerce.Enum.Status;
+import com.example.ecommerce.Enum.OrderedStatus;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -18,5 +17,5 @@ public class OrderResponseDto {
     private String orderId;
     private List<OrderItemResponseDto> items;
     private BigDecimal totalAmount;
-    private Status status;
+    private OrderedStatus orderedStatus;
 }

@@ -1,6 +1,6 @@
 package com.example.ecommerce.model;
 
-import com.example.ecommerce.Enum.Status;
+import com.example.ecommerce.Enum.OrderedStatus;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -21,7 +21,7 @@ public class Order extends Audit{
     @Id
     private String id;
     private String userId;
-    private Status OrderStatus;
+    private OrderedStatus orderedStatus;
     private BigDecimal totalAmount;
     private List<OrderItem> orderedItems;
 

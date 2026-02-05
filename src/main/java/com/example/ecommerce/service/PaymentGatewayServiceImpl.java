@@ -1,10 +1,11 @@
 package com.example.ecommerce.service;
 
+import com.example.ecommerce.Enum.OrderedStatus;
 import com.example.ecommerce.Enum.PaymentStatus;
-import com.example.ecommerce.Enum.Status;
 import com.example.ecommerce.dtos.PaystackInitResponseDto;
 import com.example.ecommerce.dtos.PaystackVerifyResponseDto;
 import com.example.ecommerce.exception.PaymentNotFoundException;
+import com.example.ecommerce.model.Order;
 import com.example.ecommerce.model.Payment;
 import com.example.ecommerce.repository.PaymentRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +53,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("email", currentUserEmail);
         payload.put("amount", totalAmount.multiply(new BigDecimal(100)));
-        payload.put("callback_url", "https://nonenlightened-tonsorial-august.ngrok-free.dev");
+        payload.put("callback_url", "https://nonenlightened-tonsorial-august.ngrok-free.dev/api/v1/orders/verify-payment");
         payload.put("metadata", Map.of("order_id", orderId));
 
         HttpHeaders headers = new HttpHeaders();
@@ -115,17 +116,21 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
             if (payment.getPaymentStatus() != PaymentStatus.SUCCESS) {
                 payment.setPaymentStatus(PaymentStatus.SUCCESS);
                 paymentRepository.save(payment);
+            }
 
-                orderService.markAsPaid(payment.getOrderId());
+            Order order = orderService.findById(payment.getOrderId());
+
+            if (order.getOrderedStatus() == OrderedStatus.CANCELLED || order.getOrderedStatus() != OrderedStatus.PAID) {
+                log.info("Updating Order {} status to PAID (Previous status: {})", order.getId(), order.getOrderedStatus());
+                orderService.markAsPaid(order.getId());
             }
         }else if (response != null && "abandoned".equals(response.getData().getStatus())) {
-            LocalDateTime minute = LocalDateTime.now().minusMinutes(30);
 
-            if(payment.getTime().isBefore(minute)) {
+            if(payment.getTime().isBefore(LocalDateTime.now().minusMinutes(30))) {
 
                 payment.setPaymentStatus(PaymentStatus.FAILED);
                 paymentRepository.save(payment);
-                orderService.updateStatus(payment.getOrderId(), Status.CANCELED);
+                orderService.updateStatus(payment.getOrderId(), OrderedStatus.CANCELLED);
 
                 log.warn("Payment {} timed out and was CANCELED after 30 mins", reference);
             } else {
@@ -134,12 +139,13 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         } else if (response != null && "failed".equals(response.getData().getStatus())) {
                 payment.setPaymentStatus(PaymentStatus.FAILED);
                 paymentRepository.save(payment);
-                orderService.updateStatus(payment.getOrderId(), Status.CANCELED);
+                orderService.updateStatus(payment.getOrderId(), OrderedStatus.CANCELLED);
                 log.warn("Payment {} failed explicitly", reference);
             } else {
-            log.info("Payment {} is still in progress (Status: {})", reference, response.getData().getStatus());
+            log.info("Payment {} is still in progress (OrderedStatus: {})", reference, response.getData().getStatus());
         }
     }
+
 
     @Override
     public void deleteAll() {
@@ -155,4 +161,5 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     public void savePayment(Payment payment) {
         paymentRepository.save(payment);
     }
+
 }

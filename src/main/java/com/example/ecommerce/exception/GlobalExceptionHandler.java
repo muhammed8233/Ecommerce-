@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
     private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("status", status.value());
+        body.put("orderedStatus", status.value());
         body.put("error", message);
         return new ResponseEntity<>(body, status);
     }
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("orderedStatus", HttpStatus.BAD_REQUEST.value());
         body.put("validationErrors", fieldErrors);
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
@@ -103,7 +103,7 @@ public class GlobalExceptionHandler {
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("orderedStatus", HttpStatus.BAD_REQUEST.value());
         body.put("validationErrors", errors);
 
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
