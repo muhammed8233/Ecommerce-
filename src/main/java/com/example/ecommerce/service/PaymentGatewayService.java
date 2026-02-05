@@ -1,5 +1,6 @@
 package com.example.ecommerce.service;
 
+import com.example.ecommerce.Enum.PaymentStatus;
 import com.example.ecommerce.model.Payment;
 
 import java.math.BigDecimal;
@@ -20,6 +21,9 @@ public interface PaymentGatewayService {
     void savePayment(Payment payment);
 
     void handlePaystackWebhook(String payload, String headerSignature);
+
+    List<Payment> findByPaymentStatus(PaymentStatus paymentStatus);
+
 }
 
 

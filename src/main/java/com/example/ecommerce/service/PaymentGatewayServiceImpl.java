@@ -12,7 +12,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -204,6 +203,11 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         }
     }
 
+    @Override
+    public List<Payment> findByPaymentStatus(PaymentStatus paymentStatus) {
+        return paymentRepository.findByPaymentStatus(paymentStatus);
+    }
+
     private boolean isSignatureValid(String payload, String headerSignature, String secretKey) throws Exception {
         Mac sha512Hmac = Mac.getInstance("HmacSHA512");
         SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
@@ -218,11 +222,4 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
 
         return result.toString().equals(headerSignature);
     }
-
-    @Scheduled(cron = "0 0/30 * * * *")
-    public void autoVerifyStuckPayments() {
-        List<Payment> stuckPayments = paymentRepository.findByPaymentStatus(PaymentStatus.PENDING);
-        stuckPayments.forEach(p -> processPaymentStatus(p.getReference()));
-    }
-
 }
