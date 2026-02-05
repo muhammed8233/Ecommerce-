@@ -42,9 +42,6 @@ public class User extends Audit implements UserDetails{
     @NotBlank(message = "password must not be empty")
     @Size(min = 4, message = "password size must not be < 4")
     private String password;
-
-    private String verificationToken;
-    private LocalDateTime tokenExpiry;
     private boolean isEnabled = false;
 
     @NotNull

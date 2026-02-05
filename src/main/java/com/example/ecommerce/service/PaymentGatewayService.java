@@ -19,8 +19,7 @@ public interface PaymentGatewayService {
 
     void savePayment(Payment payment);
 
-    void handlePaystackWebhook(String payload);
-
+    void handlePaystackWebhook(String payload, String headerSignature);
 }
 
 

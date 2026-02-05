@@ -12,14 +12,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -101,52 +106,63 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
     @Override
     @Transactional
     public void processPaymentStatus(String reference) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(paystackSecretKey);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<PaystackVerifyResponseDto> responseEntity = restTemplate.exchange(
-                baseUrl + "/transaction/verify/" + reference,
-                HttpMethod.GET,
-                entity,
-                PaystackVerifyResponseDto.class
-        );
-
-        PaystackVerifyResponseDto response = responseEntity.getBody();
         Payment payment = findByReference(reference);
+        if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
+            log.info("Payment {} already marked as SUCCESS. Skipping.", reference);
+            return;
+        }
 
-        if (response != null && "success".equals(response.getData().getStatus())) {
+        try{
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBearerAuth(paystackSecretKey);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
 
-            if (payment.getPaymentStatus() != PaymentStatus.SUCCESS) {
-                payment.setPaymentStatus(PaymentStatus.SUCCESS);
-                paymentRepository.save(payment);
+            ResponseEntity<PaystackVerifyResponseDto> responseEntity = restTemplate.exchange(
+                    baseUrl + "/transaction/verify/" + reference,
+                    HttpMethod.GET,
+                    entity,
+                    PaystackVerifyResponseDto.class
+            );
+
+            PaystackVerifyResponseDto response = responseEntity.getBody();
+
+            if (response != null && "success".equals(response.getData().getStatus())) {
+
+                if (payment.getPaymentStatus() != PaymentStatus.SUCCESS) {
+                    payment.setPaymentStatus(PaymentStatus.SUCCESS);
+                    paymentRepository.save(payment);
+                }
+
+                Order order = orderService.findById(payment.getOrderId());
+
+                if (order.getOrderedStatus() == OrderedStatus.CANCELLED || order.getOrderedStatus() != OrderedStatus.PAID) {
+                    log.info("Updating Order {} status to PAID (Previous status: {})", order.getId(), order.getOrderedStatus());
+                    orderService.markAsPaid(order.getId());
+                }
+            }else if (response != null && "abandoned".equals(response.getData().getStatus())) {
+
+                if(payment.getTime().isBefore(LocalDateTime.now().minusMinutes(30))) {
+
+                    payment.setPaymentStatus(PaymentStatus.FAILED);
+                    paymentRepository.save(payment);
+                    orderService.updateStatus(payment.getOrderId(), OrderedStatus.CANCELLED);
+
+                    log.warn("Payment {} timed out and was CANCELED after 30 mins", reference);
+                } else {
+                    log.info("Payment {} is still within grace period. No action taken.", reference);
+                }
+            } else if (response != null && "failed".equals(response.getData().getStatus())) {
+                    payment.setPaymentStatus(PaymentStatus.FAILED);
+                    paymentRepository.save(payment);
+                    orderService.updateStatus(payment.getOrderId(), OrderedStatus.CANCELLED);
+                    log.warn("Payment {} failed explicitly", reference);
+                } else {
+                log.info("Payment {} is still in progress (OrderedStatus: {})", reference, response.getData().getStatus());
             }
-
-            Order order = orderService.findById(payment.getOrderId());
-
-            if (order.getOrderedStatus() == OrderedStatus.CANCELLED || order.getOrderedStatus() != OrderedStatus.PAID) {
-                log.info("Updating Order {} status to PAID (Previous status: {})", order.getId(), order.getOrderedStatus());
-                orderService.markAsPaid(order.getId());
-            }
-        }else if (response != null && "abandoned".equals(response.getData().getStatus())) {
-
-            if(payment.getTime().isBefore(LocalDateTime.now().minusMinutes(30))) {
-
-                payment.setPaymentStatus(PaymentStatus.FAILED);
-                paymentRepository.save(payment);
-                orderService.updateStatus(payment.getOrderId(), OrderedStatus.CANCELLED);
-
-                log.warn("Payment {} timed out and was CANCELED after 30 mins", reference);
-            } else {
-                log.info("Payment {} is still within grace period. No action taken.", reference);
-            }
-        } else if (response != null && "failed".equals(response.getData().getStatus())) {
-                payment.setPaymentStatus(PaymentStatus.FAILED);
-                paymentRepository.save(payment);
-                orderService.updateStatus(payment.getOrderId(), OrderedStatus.CANCELLED);
-                log.warn("Payment {} failed explicitly", reference);
-            } else {
-            log.info("Payment {} is still in progress (OrderedStatus: {})", reference, response.getData().getStatus());
+        } catch (HttpClientErrorException e) {
+            log.error("Paystack API error for {}: {} - {}", reference, e.getStatusCode(), e.getResponseBodyAsString());
+        } catch (Exception e) {
+            log.error("Unexpected error verifying payment {}: {}", reference, e.getMessage());
         }
     }
 
@@ -166,15 +182,18 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         paymentRepository.save(payment);
     }
 
+
     @Override
-    public void handlePaystackWebhook(String payload) {
+    public void handlePaystackWebhook(String payload, String headerSignature) {
         try {
+            if (!isSignatureValid(payload, headerSignature, paystackSecretKey)) {
+                log.error("Invalid Paystack signature! Request rejected.");
+                return;
+            }
+
             JsonNode rootNode = objectMapper.readTree(payload);
-
-            String reference = rootNode.path("data").path("reference").asText();
             String event = rootNode.path("event").asText();
-
-            log.info("Received Paystack event: {} for reference: {}", event, reference);
+            String reference = rootNode.path("data").path("reference").asText();
 
             if ("charge.success".equals(event) && !reference.isEmpty()) {
                 processPaymentStatus(reference);
@@ -183,6 +202,27 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         } catch (Exception e) {
             log.error("Error processing Paystack webhook: {}", e.getMessage());
         }
+    }
+
+    private boolean isSignatureValid(String payload, String headerSignature, String secretKey) throws Exception {
+        Mac sha512Hmac = Mac.getInstance("HmacSHA512");
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
+        sha512Hmac.init(secretKeySpec);
+
+        byte[] hash = sha512Hmac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
+
+        StringBuilder result = new StringBuilder();
+        for (byte b : hash) {
+            result.append(String.format("%02x", b));
+        }
+
+        return result.toString().equals(headerSignature);
+    }
+
+    @Scheduled(cron = "0 0/30 * * * *")
+    public void autoVerifyStuckPayments() {
+        List<Payment> stuckPayments = paymentRepository.findByPaymentStatus(PaymentStatus.PENDING);
+        stuckPayments.forEach(p -> processPaymentStatus(p.getReference()));
     }
 
 }
