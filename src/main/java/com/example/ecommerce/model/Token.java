@@ -1,6 +1,7 @@
 package com.example.ecommerce.model;
 
 import lombok.*;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,8 +14,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Document(collection = "tokens")
 public class Token {
-    private String userId;
+    @Id
     private String id;
+    private String userId;
+    private String token;
 
     @Indexed(expireAfter = "1h")
     private LocalDateTime createdAt;

@@ -5,6 +5,7 @@ import com.example.ecommerce.Enum.Role;
 import com.example.ecommerce.dtos.RegisterRequestDto;
 import com.example.ecommerce.exception.UserAlreadyExistException;
 import com.example.ecommerce.exception.UserNotFoundException;
+import com.example.ecommerce.model.Token;
 import com.example.ecommerce.model.User;
 import com.example.ecommerce.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private UserRepository userRepository;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private TokenService tokenService;
 
 
     @Override
@@ -52,25 +55,25 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .email(dto.getEmail().toLowerCase().trim())
                 .password(dto.getPassword())
                 .role(Role.USER)
-                .verificationToken(String.valueOf(new java.security.SecureRandom().nextInt(9000) + 1000))
-                .tokenExpiry(LocalDateTime.now().plusMinutes(5))
                 .isEnabled(false)
                 .build();
 
         User savedUser = userRepository.save(user);
 
+        String secretToken = String.valueOf(new java.security.SecureRandom().nextInt(9000) + 1000);
+        Token verificationToken = Token.builder()
+                .token(secretToken)
+                .userId(savedUser.getId())
+                .createdAt(LocalDateTime.now())
+                .build();
+       tokenService.saveToken(verificationToken);
+
         try{
-        emailService.sendVerificationEmail(savedUser.getEmail(), savedUser.getVerificationToken());
+        emailService.sendVerificationEmail(savedUser.getEmail(), secretToken);
         } catch (Exception e) {
             log.error("Failed to send verification email to {}", savedUser.getEmail());
         }
         return savedUser;
-    }
-
-    @Override
-    public User findByVerificationToken(String token) {
-        return userRepository.findByVerificationToken(token)
-                .orElseThrow(() -> new RuntimeException("Invalid verification token"));
     }
 
     @Override

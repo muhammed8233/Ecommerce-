@@ -3,8 +3,11 @@ package com.example.ecommerce.serviceTest;
 import com.example.ecommerce.dtos.AuthenticationRequestDto;
 import com.example.ecommerce.dtos.AuthenticationResponseDto;
 import com.example.ecommerce.dtos.RegisterRequestDto;
+import com.example.ecommerce.model.Token;
 import com.example.ecommerce.model.User;
 import com.example.ecommerce.service.AuthenticationService;
+import com.example.ecommerce.service.TokenService;
+import com.example.ecommerce.service.TokenServiceImpl;
 import com.example.ecommerce.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,6 +33,8 @@ class AuthenticationServiceImplTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private TokenService tokenService;
 
     @BeforeEach
     void setUp() {
@@ -59,7 +67,14 @@ class AuthenticationServiceImplTest {
                 .password(passwordEncoder.encode("secret"))
                 .build();
         User user1 = userService.saveUser(user);
-        authService.verifyToken(user1.getVerificationToken());
+        String userToken = String.valueOf(new java.security.SecureRandom().nextInt(9000) + 1000);
+        Token token = Token.builder()
+                .token(userToken)
+                .userId(user1.getId())
+                .createdAt(LocalDateTime.now())
+                .build();
+        tokenService.saveToken(token);
+        authService.verifyUser(user1.getEmail(), userToken);
 
         AuthenticationRequestDto authRequest = AuthenticationRequestDto.builder()
                 .email("jane@example.com")

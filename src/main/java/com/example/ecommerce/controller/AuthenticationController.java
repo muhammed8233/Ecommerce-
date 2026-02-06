@@ -29,8 +29,9 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-token")
-    public ResponseEntity<String> verifyUser(@RequestParam("token") String token) {
-       return authenticationService.verifyToken(token);
+    public ResponseEntity<String> verifyUser( @RequestParam("email") String email,
+                                              @RequestParam("token") String token) {
+       return authenticationService.verifyUser(email, token);
     }
 
     @PostMapping("/resend-token")

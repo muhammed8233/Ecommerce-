@@ -1,6 +1,7 @@
-package com.example.ecommerce.model;
+package com.example.ecommerce.config;
 
 import com.example.ecommerce.Enum.PaymentStatus;
+import com.example.ecommerce.model.Payment;
 import com.example.ecommerce.service.PaymentGatewayService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;

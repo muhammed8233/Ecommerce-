@@ -15,8 +15,9 @@ public class PayStackController {
     private final PaymentGatewayService paymentGatewayService;
 
     @PostMapping("/paystack-webhook")
-    public ResponseEntity<Void> handlePaystackWebhook(@RequestBody String payload) {
-       paymentGatewayService.handlePaystackWebhook(payload);
+    public ResponseEntity<Void> handlePaystackWebhook(@RequestBody String payload,
+                                                      @RequestHeader("x-paystack-signature") String signature) {
+       paymentGatewayService.handlePaystackWebhook(payload,signature);
         return ResponseEntity.ok().build();
     }
 }
