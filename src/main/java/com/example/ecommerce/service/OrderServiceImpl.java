@@ -2,6 +2,7 @@ package com.example.ecommerce.service;
 
 import com.example.ecommerce.Enum.OrderedStatus;
 import com.example.ecommerce.Enum.PaymentStatus;
+import com.example.ecommerce.Enum.Reason;
 import com.example.ecommerce.dtos.OrderItemRequestDto;
 import com.example.ecommerce.dtos.OrderItemResponseDto;
 import com.example.ecommerce.dtos.OrderRequestDto;
@@ -52,6 +53,7 @@ public class OrderServiceImpl implements OrderService {
     private MongoTemplate mongoTemplate;
 
 
+
     @Override
     public String initiatePayment(String orderId){
 
@@ -80,6 +82,13 @@ public class OrderServiceImpl implements OrderService {
 
                     productService.deductStock(product.getId(), orderItemRequestDto.getQuantity());
 
+                    InventoryMovement movement = InventoryMovement.builder()
+                            .product(product)          
+                            .quantityChange(orderItemRequestDto.getQuantity())
+                            .reason(Reason.SALE)
+                            .build();
+                    inventoryMovementService.save(movement);
+
                     OrderItem orderItem = OrderItem.builder()
                             .productId(product.getId())
                             .name(product.getProductName())
@@ -106,6 +115,7 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = savePendingOrder(request, user, totalAmount);
 
+        System.out.println("DEBUG - Auth Object: " + SecurityContextHolder.getContext().getAuthentication());
         return mapToOrderResponse(order);
 
     }
@@ -246,6 +256,27 @@ public class OrderServiceImpl implements OrderService {
                 .orElseThrow(() -> new OrderNotFoundException("Order with id: " + orderId + "not found"));
 
     }
+
+    @Override
+    public Page<OrderResponseDto> getOrdersByUserId(String userId, Pageable pageable) {
+        // 1. Create a criteria that checks for BOTH String and ObjectId formats
+        Criteria criteria = new Criteria().orOperator(
+                Criteria.where("userId").is(userId), // Checks if stored as "69bc..."
+                Criteria.where("userId").is(new org.bson.types.ObjectId(userId)) // Checks if stored as ObjectId("69bc...")
+        );
+
+        // 2. Find paginated results
+        Query findQuery = new Query(criteria).with(pageable);
+        List<Order> orders = mongoTemplate.find(findQuery, Order.class);
+
+        // 3. Count total matches using the same OR criteria
+        long count = mongoTemplate.count(new Query(criteria), Order.class);
+
+        // 4. Return the paged response
+        return PageableExecutionUtils.getPage(orders, pageable, () -> count)
+                .map(this::mapToOrderResponse);
+    }
+
 
     public void handlePaymentWebhook(String orderId, PaymentStatus status) {
         Order order = orderRepository.findById(orderId)

@@ -25,7 +25,6 @@ public class InventoryMovement extends Audit{
     @NotNull(message = "product is required")
     private Product product;
 
-    @PositiveOrZero
     private int quantityChange;
 
     @NotNull(message = "reason is required")

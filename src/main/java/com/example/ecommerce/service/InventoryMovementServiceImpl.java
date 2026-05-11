@@ -46,20 +46,47 @@ public class InventoryMovementServiceImpl implements InventoryMovementService {
     public boolean reReserveStock(Order order) {
         List<OrderItem> items = order.getOrderedItems();
 
-        for (OrderItem item : items) {
-            Product product = productService.findById(item.getProductId());
-            if (product.getStockQuantity() < item.getQuantity()) {
-                return false;
-            }
-        }
+        boolean allInStock = items.stream()
+                .map(item -> productService.findById(item.getProductId()))
+                .allMatch(product -> {
+                    int required = items.stream()
+                            .filter(i -> i.getProductId().equals(product.getId()))
+                            .findFirst()
+                            .map(OrderItem::getQuantity)
+                            .orElse(0);
+                    return product.getStockQuantity() >= required;
+                });
 
-        for (OrderItem item : items) {
+        if (!allInStock) return false;
+
+        items.forEach(item -> {
             Product product = productService.findById(item.getProductId());
+
             product.setStockQuantity(product.getStockQuantity() - item.getQuantity());
-            productService.saveProduct(product);
-        }
+            Product updatedProduct = productService.saveProduct(product);
+
+            InventoryMovement saleLog = InventoryMovement.builder()
+                    .product(updatedProduct)
+                    .quantityChange(-item.getQuantity())
+                    .reason(Reason.SALE)
+                    .build();
+
+            inventoryMovementRepository.save(saleLog);
+        });
 
         return true;
+    }
+
+
+
+    @Override
+    public void save(InventoryMovement movement) {
+        inventoryMovementRepository.save(movement);
+    }
+
+    @Override
+    public List<InventoryMovement> getAllMovements() {
+        return inventoryMovementRepository.findAll();
     }
 
 }

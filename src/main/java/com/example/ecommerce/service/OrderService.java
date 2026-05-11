@@ -26,4 +26,6 @@ public interface OrderService {
     void updateStatus(String orderId, OrderedStatus newOrderedStatus);
 
     Order findById(String orderId);
+
+    @Nullable Page<OrderResponseDto> getOrdersByUserId(String userId, Pageable pageable);
 }

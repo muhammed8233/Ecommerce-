@@ -7,6 +7,7 @@ import com.example.ecommerce.dtos.RegisterRequestDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,8 +30,8 @@ public class AuthenticationController {
     }
 
     @PostMapping("/verify-token")
-    public ResponseEntity<String> verifyUser( @RequestParam("email") String email,
-                                              @RequestParam("token") String token) {
+    public ResponseEntity<String> verifyUser(@RequestParam("email") String email,
+                                             @RequestParam("token") String token) {
        return authenticationService.verifyUser(email, token);
     }
 

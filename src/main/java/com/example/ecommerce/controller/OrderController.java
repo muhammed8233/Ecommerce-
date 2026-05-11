@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping(path = "api/v1/orders")
-@RequiredArgsConstructor
 public class OrderController {
    @Autowired
    private OrderService orderService;
@@ -46,10 +45,13 @@ public class OrderController {
        return ResponseEntity.ok(orderService.getOrders(search, pageable));
    }
 
-   @GetMapping("/{id}")
-   public ResponseEntity<OrderResponseDto> getOrderById(@PathVariable String id,
-                                                        @RequestParam(value = "reference", required = false) String reference) {
-       Order order = orderService.findById(id);
-       return ResponseEntity.ok(orderService.mapToOrderResponse(order));
-   }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Page<OrderResponseDto>> getOrdersByUserId(
+            @PathVariable String userId,
+            @PageableDefault(size = 10, sort = "id") Pageable pageable) {
+
+        return ResponseEntity.ok(orderService.getOrdersByUserId(userId, pageable));
+    }
+
 }

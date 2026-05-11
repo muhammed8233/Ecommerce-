@@ -10,11 +10,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/v1/payments")
 @RequiredArgsConstructor
 @Slf4j
-public class PayStackController {
+public class PaymentController {
 
     private final PaymentGatewayService paymentGatewayService;
 
-    @PostMapping("/paystack-webhook")
+    @PostMapping("/webhook")
     public ResponseEntity<Void> handlePaystackWebhook(@RequestBody String payload,
                                                       @RequestHeader("x-paystack-signature") String signature) {
        paymentGatewayService.handlePaystackWebhook(payload,signature);

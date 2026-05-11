@@ -10,7 +10,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -29,7 +28,6 @@ public class Payment extends Audit{
     @Field(targetType = FieldType.DECIMAL128)
     private BigDecimal amount;
     private PaymentStatus paymentStatus;
-    private LocalDateTime time;
 
     @Indexed(unique = true)
     private String reference;

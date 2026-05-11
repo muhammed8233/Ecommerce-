@@ -61,7 +61,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
         Map<String, Object> payload = new HashMap<>();
         payload.put("email", currentUserEmail);
         payload.put("amount", totalAmount.multiply(new BigDecimal(100)));
-        payload.put("callback_url", "https://nonenlightened-tonsorial-august.ngrok-free.dev/api/v1/orders/" + orderId);
+        payload.put("callback_url", " https://breezy-garlics-smell.loca.lt/payment-status/" + orderId);
         payload.put("metadata", Map.of("order_id", orderId));
 
         HttpHeaders headers = new HttpHeaders();
@@ -140,7 +140,7 @@ public class PaymentGatewayServiceImpl implements PaymentGatewayService {
                 }
             }else if (response != null && "abandoned".equals(response.getData().getStatus())) {
 
-                if(payment.getTime().isBefore(LocalDateTime.now().minusMinutes(30))) {
+                if(payment.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(30))) {
 
                     payment.setPaymentStatus(PaymentStatus.FAILED);
                     paymentRepository.save(payment);
